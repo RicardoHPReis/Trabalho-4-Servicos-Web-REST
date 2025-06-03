@@ -1,0 +1,6 @@
+# Trabalho 2 - Arquitetura Orientada a Eventos e Criptografia Assimétrica #
+### Trabalho de Sistemas Distribuídos
+Em português:
+Este trabalho tem como objetivo de desenvolver uma aplicação distribuída Microsserviços são serviços menores e independentes. Cada microsserviço é projetado para ter um conjunto de recursos e é dedicado à solução de um problema específico. Utilizando qualquer linguagem de programação para implementar um sistema de reserva de cruzeiros composto por 4 Microsserviços (MS), cada um com uma
+responsabilidade específica. Os microsserviços vão se comunicar de forma assíncrona, por meio de mensagens publicadas e assinadas em filas, para gerenciar o processo de reserva e suas etapas subsequentes. O fluxo de dados é orquestrado por eventos através do serviço de mensageria RabbitMQ e do protocolo AMQP que garantem a sincronização entre as diferentes funcionalidades.\
+O projeto foi feito em conjunto com Beatriz Marcelino Fernandes e pertence à matéria de Sistemas Distribuídos, provido pela professora Ana Cristina Barreiras Kochem Vendramin do curso de Sistemas de Informação na UTFPR (Universidade Tecnológica Federal do Paraná).

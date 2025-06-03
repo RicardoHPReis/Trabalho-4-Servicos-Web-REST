@@ -1,0 +1,37 @@
+{
+    "caribe": {
+        "titulo": "Promoção Caribe!",
+        "descricao": "7 noites no Caribe por R$ 3500!",
+        "validade": "31/12/2025"
+    },
+    "mediterraneo": {
+        "titulo": "Mediterrâneo em Oferta",
+        "descricao": "10 noites por R$ 4800!",
+        "validade": "30/11/2025"
+    },
+    "alasca": {  
+        "titulo": "Aurora Boreal no Alasca",
+        "descricao": "8 noites por R$ 4200!",
+        "validade": "15/10/2025"
+    },
+    "nordeste": {
+        "titulo": "Nordeste Brasileiro",
+        "descricao": "5 noites por R$ 2200!",
+        "validade": "20/09/2025"
+    },
+    "asia": {
+        "titulo": "Ásia com Desconto",
+        "descricao": "12 noites por R$ 6500!",
+        "validade": "10/08/2025"
+    },
+    "antartida": {
+        "titulo": "Expedição à Antártida",
+        "descricao": "10 noites por R$ 8900!",
+        "validade": "05/07/2025"
+    },
+    "fiordes": {
+        "titulo": "Fiordes Noruegueses",
+        "descricao": "7 noites por R$ 5200!",
+        "validade": "25/06/2025"
+    }
+}

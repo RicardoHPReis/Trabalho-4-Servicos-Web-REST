@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Assinante de Promoções</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Assinante de Promoções de Cruzeiros</h1>
+    </header>
+
+    <div class="container">
+        <form action="/" method="POST" class="destinos-form">
+            <h2>Destinos Disponíveis</h2>
+            <div class="checkbox-group">
+                {% for destino in destinos_disponiveis %}
+                <label class="checkbox-item">
+                    <input type="checkbox" name="destinos" value="{{ destino }}" 
+                        {% if destino in destinos_inscritos %}checked{% endif %}>
+                    {{ destino|title }}
+                </label>
+                {% endfor %}
+            </div>
+            <button type="submit">Atualizar Inscrições</button>
+        </form>
+
+        <h2>Promoções Recebidas</h2>
+        <div id="promocoes-list">
+            {% if promocoes %}
+                {% for promocao in promocoes %}
+                    {{ promocao|safe }}
+                {% endfor %}
+            {% else %}
+                <p class="sem-promocoes">Nenhuma promoção recente </p>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        // Atualiza a lista de promoções
+        function atualizarPromocoes() {
+            fetch('/promocoes?t=' + new Date().getTime())
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('promocoes-list');
+                    container.innerHTML = data.promocoes.join('') || '<p class="sem-promocoes">Nenhuma promoção recente </p>';
+                });
+        }
+
+        // Atualiza a cada 2 segundos
+        setInterval(atualizarPromocoes, 2000);
+        atualizarPromocoes(); // Carrega inicialmente
+    </script>
+</body>
+</html>
