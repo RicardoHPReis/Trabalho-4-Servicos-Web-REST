@@ -1,0 +1,18 @@
+[
+    {
+        "reserva_id": 101,
+        "itinerario_id": 1,
+        "destino": "Caribe",
+        "valor_total": 7000.00,
+        "num_passageiros": 2,
+        "num_cabines": 1
+    },
+    {
+        "reserva_id": 102,
+        "itinerario_id": 2,
+        "destino": "Mediterrâneo",
+        "valor_total": 4800.00,
+        "num_passageiros": 1,
+        "num_cabines": 1
+    }
+]

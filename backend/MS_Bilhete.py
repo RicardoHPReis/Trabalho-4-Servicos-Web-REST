@@ -10,9 +10,14 @@ class Bilhete:
         self.chave_publica_pagamento = chave_publica()
         self.connection = pika.BlockingConnection(pika.ConnectionParameters("localhost"))
         self.channel = self.connection.channel()
+        
+        self.channel.exchange_declare(exchange='sd4-pag', exchange_type='fanout', durable=True)
 
-        self.channel.queue_declare(queue="pagamento-aprovado")
-        self.channel.queue_declare(queue="bilhete-gerado")
+        self.channel.queue_declare(queue="sd4-pagamento-aprovado", durable=True)
+        self.channel.queue_declare(queue="sd4-bilhete-gerado")
+        
+        self.channel.queue_bind(exchange='sd4-pag', queue="sd4-pagamento-aprovado")
+        
         
     
     def __del__(self):
@@ -49,7 +54,7 @@ class Bilhete:
         
         channel.basic_publish(
             exchange='',
-            routing_key='bilhete-gerado',
+            routing_key='sd4-bilhete-gerado',
             body=json.dumps(bilhete)
         )
         print(f"[✓] Bilhete gerado publicado para reserva {bilhete['reserva_id']}")   
@@ -58,7 +63,7 @@ class Bilhete:
     def run(self):
         os.system('cls' if os.name == 'nt' else 'clear')
         self.titulo()
-        self.channel.basic_consume(queue='pagamento-aprovado', on_message_callback=self.callback_pagamento_aprovado, auto_ack=True)
+        self.channel.basic_consume(queue='sd4-pagamento-aprovado', on_message_callback=self.callback_pagamento_aprovado)
 
         print("[MS Bilhete] Aguardando confirmações de pagamento...")
         self.channel.start_consuming()

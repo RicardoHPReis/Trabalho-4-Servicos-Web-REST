@@ -1,10 +1,10 @@
 from flask import Flask, request, render_template, jsonify
 from flask_sse import sse
 import threading
+import datetime as d
+import logging
 import pika
 import json
-import logging
-import datetime as d
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -18,22 +18,7 @@ with open('../json/marketing.json', 'r', encoding='utf-8') as f:
     destinos_disponiveis = json.load(f).keys()
 
 
-def callback(ch, method, properties, body):
-    if not consumidor_ativo:
-        return
-    mensagem = json.loads(body)
-    destino = method.routing_key.split('_')[1]
-    tempo_recebido = d.datetime.now()
 
-    if destino in destinos and tempo_recebido >= inicio_inscricao:
-        promocao = f"""
-        <div class="promocao">
-            <h3>{mensagem['titulo']}</h3>
-            <p>{mensagem['descricao']}</p>
-            <small>Validade: {mensagem['validade']}</small>
-        </div>
-        """
-        promocoes_recebidas.insert(0, promocao)
 
 def consumir_promocoes(destinos):
     global promocoes_recebidas, inicio_inscricao, consumidor_ativo
@@ -43,7 +28,23 @@ def consumir_promocoes(destinos):
 
     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
     channel = connection.channel()
-    
+    def callback(ch, method, properties, body):
+        if not consumidor_ativo:
+            return
+        mensagem = json.loads(body)
+        destino = method.routing_key.split('_')[1]
+        tempo_recebido = d.datetime.now()
+
+        if destino in destinos and tempo_recebido >= inicio_inscricao:
+            promocao = f"""
+            <div class="promocao">
+                <h3>{mensagem['titulo']}</h3>
+                <p>{mensagem['descricao']}</p>
+                <small>Validade: {mensagem['validade']}</small>
+            </div>
+            """
+            promocoes_recebidas.insert(0, promocao)
+        
     # Limpa filas antigas e recria
     for destino in destinos:
         fila = f"promocoes-destino_{destino}"
@@ -82,7 +83,7 @@ def index():
     
     return render_template(
         "assinante.html",
-        destinos_disponiveis=destinos_disponiveis,  # Nome corrigido
+        destinos_disponiveis=destinos_disponiveis,   # Nome corrigido
         destinos_inscritos=destinos_inscritos,       # Adicionado
         promocoes=promocoes_recebidas
     )

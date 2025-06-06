@@ -1,6 +1,8 @@
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.backends import default_backend
+import json
+import os
 
 def chave_privada():
     with open("./secret/MS_Pagamento_privado.pem", "rb") as chave:
@@ -34,3 +36,36 @@ def verificar_assinatura(chave_publica, assinatura, mensagem:str):
         return True
     except Exception:
         return False
+
+
+def carregar_dados(caminho):
+    if not os.path.exists(caminho):
+        return []
+    with open(caminho, encoding='utf-8') as f:
+        dados = json.load(f)
+    return dados
+
+def salvar_dados(caminho, dados):
+    with open(caminho, "w", encoding="utf-8") as f:
+        json.dump(dados, f, indent=4, ensure_ascii=False)
+
+def adicionar_dado(caminho, novo_dado):
+    dados = carregar_dados(caminho)
+    dados.append(novo_dado)
+    salvar_dados(caminho, dados)
+    return carregar_dados(caminho)
+    
+def atualizar_dado(caminho, id, chave, novo_valor):
+    dados = carregar_dados(caminho)
+    for item in dados:
+        if item.get("id") == id:
+            item[chave] = novo_valor
+            break
+    salvar_dados(caminho, dados)
+    return dados
+    
+def deletar_dado(dados, caminho, id):
+    dados = carregar_dados(caminho)
+    dados = [item for item in dados if item.get("id") != id]
+    salvar_dados(caminho, dados)
+    return dados

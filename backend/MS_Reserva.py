@@ -1,26 +1,36 @@
 import pika
 import json
+import random
 import uuid
 import time
-import random
 import sys
 import os
+import requests
+import unicodedata as ud
+from flask import Flask, request, render_template, jsonify
+from flask_sse import sse
 from shared.utils import verificar_assinatura, chave_publica
 
 class Reserva:
     def __init__(self):
+        self.app = Flask(__name__)
+        
         self.chave_publica_pagamento = chave_publica()
         self.connection = pika.BlockingConnection(pika.ConnectionParameters("localhost"))
         self.channel = self.connection.channel()
-        self.channel.queue_declare(queue="reserva-criada")
-        self.channel.queue_declare(queue="reserva-cancelada")
-        self.channel.queue_declare(queue="pagamento-aprovado-rs")
-        self.channel.queue_declare(queue="pagamento-recusado")
-        self.channel.queue_declare(queue="bilhete-gerado")
+        self.channel.exchange_declare(exchange='sd4-pag', exchange_type='fanout', durable=True)
+        
+        self.channel.queue_declare(queue="sd4-reserva-criada")
+        self.channel.queue_declare(queue="sd4-reserva-cancelada")
+        self.channel.queue_declare(queue="sd4-pagamento-aprovado", durable=True)
+        self.channel.queue_declare(queue="sd4-pagamento-recusado")
+        self.channel.queue_declare(queue="sd4-bilhete-gerado")
+        
+        self.channel.queue_bind(exchange='sd4-pag', queue="sd4-pagamento-aprovado")
 
         self.reservas = {}
         self.itinerarios = []
-        with open('./shared/lugares.json', encoding='utf-8') as arquivo:
+        with open('./json/itinerarios.json', encoding='utf-8') as arquivo:
             self.itinerarios = json.load(arquivo)
         
         self.destinos = list(self.itinerarios.keys())
@@ -93,23 +103,50 @@ class Reserva:
             print(f"[INFO] Reserva {reserva_id} cancelada.")
 
 
-    def reserva_criada(self, reserva_id, canal):
+    def reserva_criada(self, reserva_id):
         reserva = self.reservas[reserva_id]
         msg = {
             "reserva_id": reserva_id,
+            "itinerario_id": reserva["itinerario_id"],
+            "destino": reserva["destino"],
             "valor": reserva["valor_total"],
-            "num_cabines": reserva["num_cabines"],
             "num_passageiros": reserva["num_passageiros"],
-            "link_pagamento": f"http://localhost:5000/pagar/{reserva_id}"
+            "num_cabines": reserva["num_cabines"]
         }
-        canal.basic_publish(
+        self.channel.basic_publish(
             exchange='',
-            routing_key='reserva-criada',
+            routing_key='sd4-reserva-criada',
             body=json.dumps(msg)
         )
+    
+    
+    def cancelar_reserva(self, reserva_id):
+        reserva = self.reservas[reserva_id]
+        msg = {
+            "reserva_id": reserva_id,
+            "itinerario_id": reserva["itinerario_id"],
+            "destino": reserva["destino"],
+            "valor": reserva["valor_total"],
+            "num_passageiros": reserva["num_passageiros"],
+            "num_cabines": reserva["num_cabines"]
+        }
+        self.channel.basic_publish(
+            exchange='',
+            routing_key='sd4-reserva-cancelada',
+            body=json.dumps(msg)
+        )
+        
+    def itinerarios_rotas(self):
+        @self.app.route('/reserva/pagamento', methods=['POST'])
+        def webhook_receiver():
+            data = request.json
+            print("Received webhook data:", data)
+            return jsonify({'message': 'Webhook received successfully'}), 200
 
 
     def run(self):
+        self.app.run(debug=True)
+        
         lugar = {}
         while True:
             os.system('cls' if os.name == 'nt' else 'clear')
@@ -128,7 +165,7 @@ class Reserva:
                 print(f"Porto Embarque: {it['porto_embarque']} -> Porto Retorno: {it['porto_retorno']}")
                 print("--------------------------")
             
-            destino = input("Escolha o destino: ").lower()
+            destino = ud.normalize('NFKD', input("Escolha o destino: ").lower().strip()).encode('ascii', 'ignore').decode('utf-8')
             if destino in self.destinos:
                 lugar = self.itinerarios[destino]
                 break
@@ -152,10 +189,11 @@ class Reserva:
         print(f"\n[INFO] Link de pagamento: http://localhost:5000/pagar/{reserva_id}")
         self.reserva_criada(reserva_id, self.channel)
         print(f"[INFO] Reserva criada com ID {reserva_id}")
+        self.cancelar_reserva(reserva_id, self.channel)
 
-        self.channel.basic_consume(queue='pagamento-aprovado-rs', on_message_callback=self.callback_pagamento, auto_ack=True)
-        self.channel.basic_consume(queue='pagamento-recusado', on_message_callback=self.callback_pagamento, auto_ack=True)
-        self.channel.basic_consume(queue='bilhete-gerado', on_message_callback=self.callback_bilhete, auto_ack=True)
+        self.channel.basic_consume(queue='sd4-pagamento-aprovado', on_message_callback=self.callback_pagamento)
+        self.channel.basic_consume(queue='sd4-pagamento-recusado', on_message_callback=self.callback_pagamento, auto_ack=True)
+        self.channel.basic_consume(queue='sd4-bilhete-gerado', on_message_callback=self.callback_bilhete, auto_ack=True)
         
         print("[*] Aguardando confirmações...")
         self.channel.start_consuming()

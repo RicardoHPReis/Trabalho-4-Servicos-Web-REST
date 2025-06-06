@@ -8,19 +8,14 @@ import os
 class Marketing:
     def __init__(self):
         self.promocoes = {}
-        with open('./shared/marketing.json', encoding='utf-8') as arquivo:
+        with open('./json/marketing.json', encoding='utf-8') as arquivo:
             self.promocoes = json.load(arquivo)
         
         self.destinos_disponiveis = list(self.promocoes.keys())
         
         self.connection = pika.BlockingConnection(pika.ConnectionParameters("localhost"))
         self.channel = self.connection.channel()
-        for destino in self.destinos_disponiveis:
-            self.channel.queue_declare(queue=f"promocoes-destino_{destino}")
-            fila = f"promocoes-destino_{destino}"
-            self.channel.queue_declare(
-                queue=fila
-            )
+        self.channel.queue_declare(queue="sd4-promocoes-destino")
     
     
     def __del__(self):
@@ -40,14 +35,9 @@ class Marketing:
         print("--------------------\n")
 
 
-    def publicar_promocao(self, channel, destino):
-        fila = f"promocoes-destino_{destino}"
+    def publicar_promocao(self, destino):
         msg = self.promocoes[destino]
-        channel.basic_publish(
-            exchange='',
-            routing_key=fila,
-            body=json.dumps(msg)
-        )
+        self.channel.basic_publish(exchange='', routing_key="sd4-promocoes-destino", body=json.dumps(msg))
         print(f"[✓] Promoção para '{destino}' publicada")
 
 
@@ -56,7 +46,7 @@ class Marketing:
         self.titulo()
         while True:
             destino = random.choice(self.destinos_disponiveis)
-            self.publicar_promocao(self.channel, destino)
+            self.publicar_promocao(destino)
             time.sleep(random.randint(10, 30))
 
 
