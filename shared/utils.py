@@ -54,10 +54,11 @@ def adicionar_dado(caminho, chave, novos_valores) -> dict:
     dados[chave] = novos_valores
     salvar_dados(caminho, dados)
     return dados
-    
-def atualizar_dado(caminho, chave, novos_valores) -> dict:
+
+def atualizar_dado(caminho, chave_inicial, chave, novo_valor):
     dados = carregar_dados(caminho)
-    dados[chave].update(novos_valores)
+    item = dados[chave_inicial]
+    item[chave] = novo_valor
     salvar_dados(caminho, dados)
     return dados
     

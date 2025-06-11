@@ -1,173 +1,271 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Reserva de Cruzeiros</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      max-width: 700px;
-      margin: auto;
-      padding: 1rem;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f9fafc;
+      margin: 0;
+      padding: 20px;
+      color: #1f2937;
     }
-    textarea {
+
+    header {
+      background: #6366f1;
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+    }
+
+    section {
+      margin-top: 24px;
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+      transition: box-shadow 0.3s ease;
+    }
+
+    section:hover {
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    }
+
+    h1, h2 {
+      margin-top: 0;
+    }
+
+    label {
+      font-weight: 600;
+      display: block;
+      margin: 12px 0 6px;
+    }
+
+    input, select {
+      padding: 10px;
       width: 100%;
-      height: 100px;
+      max-width: 420px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      font-size: 16px;
+      margin-bottom: 10px;
     }
+
     button {
-      margin: 0.2rem 0;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+      background-color: #6366f1;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background-color: #4f46e5;
+    }
+
+    .notificacoes {
+      margin-top: 16px;
+    }
+
+    .alerta {
+      background-color: #eef2ff;
+      border-left: 4px solid #6366f1;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+    }
+
+    a {
+      color: #6366f1;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    fieldset {
+      border: none;
+      padding: 0;
+      margin-bottom: 10px;
+    }
+
+    legend {
+      font-weight: bold;
+      margin-bottom: 8px;
     }
   </style>
 </head>
 <body>
-  <h1>Sistema de Reservas</h1>
+  <header>
+    <h1>Reserva de Cruzeiros</h1>
+    <p>Planeje sua viagem com facilidade e receba promoções em tempo real</p>
+  </header>
 
-  <h2>Seu ID</h2>
-  <p id="idExibido" style="font-weight: bold;"></p>
+  <section>
+    <h2>Consultar Itinerários</h2>
+    <form id="formConsulta">
+      <label>Destino:
+        <input type="text" name="destino" required />
+      </label>
+      <label>Data de Embarque:
+        <input type="date" name="data" required />
+      </label>
+      <label>Porto de Embarque:
+        <input type="text" name="porto" required />
+      </label>
+      <button type="submit">Buscar</button>
+    </form>
+    <pre id="resultadosConsulta"></pre>
+  </section>
 
-  <h2>Consultar Itinerários</h2>
-  <input id="destino" placeholder="Destino" />
-  <input id="data" placeholder="Data de embarque (AAAA-MM-DD)" />
-  <input id="porto" placeholder="Porto de embarque" />
-  <button onclick="consultar()">Consultar</button>
-  <button onclick="verTodos()">Ver Todos os Itinerários</button>
-  <pre id="resultado"></pre>
+  <section>
+    <h2>Efetuar Reserva</h2>
+    <form id="formReserva">
+      <label>ID do Itinerário:
+        <input type="text" name="itinerario_id" required />
+      </label>
+      <label>Número de Passageiros:
+        <input type="number" name="passageiros" min="1" required />
+      </label>
+      <label>Número de Cabines:
+        <input type="number" name="cabines" min="1" required />
+      </label>
+      <label>Seu ID (clienteId):
+        <input type="text" name="cliente_id" required />
+      </label>
+      <button type="submit">Reservar</button>
+    </form>
+    <div id="linkPagamento"></div>
+  </section>
 
-  <h2>Efetuar Reserva</h2>
-  <input id="dataReserva" placeholder="Data de embarque" />
-  <input id="qtdPassageiros" placeholder="Qtd passageiros" />
-  <input id="qtdCabines" placeholder="Qtd cabines" />
-  <input id="valor" placeholder="Valor total" />
-  <button onclick="reservar()">Reservar</button>
-  <pre id="linkPagamento"></pre>
+  <section>
+    <h2>Cancelar Reserva</h2>
+    <form id="formCancelar">
+      <label>Código da Reserva:
+        <input type="text" name="reserva_id" required />
+      </label>
+      <button type="submit">Cancelar Reserva</button>
+    </form>
+    <div id="statusCancelamento"></div>
+  </section>
 
-  <h2>Minhas Reservas</h2>
-  <button onclick="verReservas()">Ver</button>
-  <pre id="minhas-reservas"></pre>
+  <section>
+    <h2>Promoções em Tempo Real</h2>
+    <form id="formPromocoes">
+      <label>Seu ID (clienteId):
+        <input type="text" name="cliente_id" required />
+      </label>
 
-  <h2>Cancelar Reserva</h2>
-  <input id="idReserva" placeholder="ID da reserva" />
-  <button onclick="cancelarReserva()">Cancelar</button>
-  <pre id="cancelamento"></pre>
+      <fieldset>
+        <legend>Escolha os destinos:</legend>
+        <label><input type="checkbox" name="destinos" value="a"> Destino A</label>
+        <label><input type="checkbox" name="destinos" value="b"> Destino B</label>
+        <label><input type="checkbox" name="destinos" value="c"> Destino C</label>
+      </fieldset>
 
-  <h2>Gerenciar Notificações</h2>
-  <button onclick="registrarInteresse()">Registrar Interesse em Promoções</button>
-  <button onclick="cancelarInteresse()">Cancelar Interesse</button>
-  <pre id="interesse-status"></pre>
-
-  <h2>Notificações</h2>
-  <pre id="sse"></pre>
+      <button type="submit">Registrar Interesse</button>
+      <button type="button" onclick="cancelarInteresse()">Cancelar Interesse</button>
+    </form>
+    <div id="notificacoes" class="notificacoes"></div>
+  </section>
 
   <script>
-    const apiUrl = "http://localhost:5000";
-
-    function gerarUUID() {
-      return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
-        (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
-      );
-    }
-
-    function obterClientId() {
-      let id = localStorage.getItem("client_id");
-      if (!id) {
-        id = gerarUUID();
-        localStorage.setItem("client_id", id);
-      }
-      document.getElementById("idExibido").textContent = `ID do Cliente: ${id}`;
-      return id;
-    }
-
-    function getClientId() {
-      return localStorage.getItem("client_id");
-    }
-
-    async function verTodos() {
-      const res = await fetch(`${apiUrl}/itinerarios`);
-      const dados = await res.json();
-      document.getElementById("resultado").textContent = JSON.stringify(dados, null, 2);
-    }
-
-    async function consultar() {
-      const destino = document.getElementById("destino").value;
-      const data = document.getElementById("data").value;
-      const porto = document.getElementById("porto").value;
-
-      const res = await fetch(`${apiUrl}/itinerarios?destino=${destino}&data=${data}&porto=${porto}`);
-      const dados = await res.json();
-      document.getElementById("resultado").textContent = JSON.stringify(dados, null, 2);
-    }
-
-    async function reservar() {
-      const data = document.getElementById("dataReserva").value;
-      const passageiros = parseInt(document.getElementById("qtdPassageiros").value);
-      const cabines = parseInt(document.getElementById("qtdCabines").value);
-      const valor = parseFloat(document.getElementById("valor").value);
-      const client_id = getClientId();
-
-      const res = await fetch(`${apiUrl}/reservar`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data, passageiros, cabines, valor, client_id })
-      });
-      const dados = await res.json();
-      document.getElementById("linkPagamento").textContent = JSON.stringify(dados, null, 2);
-    }
-
-    async function verReservas() {
-      const client_id = getClientId();
-      const res = await fetch(`${apiUrl}/reservas/${client_id}`);
-      const dados = await res.json();
-      document.getElementById("minhas-reservas").textContent = JSON.stringify(dados, null, 2);
-    }
-
-    async function cancelarReserva() {
-      const reserva_id = document.getElementById("idReserva").value;
-      const client_id = getClientId();
-      const res = await fetch(`${apiUrl}/cancelar-reserva`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reserva_id, client_id })
-      });
-      const dados = await res.json();
-      document.getElementById("cancelamento").textContent = JSON.stringify(dados, null, 2);
-    }
-
-    async function registrarInteresse() {
-      const client_id = getClientId();
-      const res = await fetch(`${apiUrl}/interesse`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ client_id })
-      });
-      const dados = await res.json();
-      document.getElementById("interesse-status").textContent = JSON.stringify(dados, null, 2);
-    }
-
-    async function cancelarInteresse() {
-      const client_id = getClientId();
-      const res = await fetch(`${apiUrl}/cancelar-interesse`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ client_id })
-      });
-      const dados = await res.json();
-      document.getElementById("interesse-status").textContent = JSON.stringify(dados, null, 2);
-    }
-
-    function escutarNotificacoes() {
-      const client_id = getClientId();
-      const sse = new EventSource(`${apiUrl}/sse/${client_id}`);
-
-      sse.onmessage = (event) => {
-        const sseDiv = document.getElementById("sse");
-        sseDiv.textContent += `\n${event.data}`;
-      };
-    }
-
-    window.addEventListener("load", () => {
-      obterClientId();
-      escutarNotificacoes();
+    document.getElementById("formConsulta").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const dados = Object.fromEntries(new FormData(e.target));
+      const res = await fetch("/api/itinerarios?" + new URLSearchParams(dados));
+      const data = await res.json();
+      document.getElementById("resultadosConsulta").innerText = JSON.stringify(data, null, 2);
     });
+
+    document.getElementById("formReserva").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const dados = Object.fromEntries(new FormData(e.target));
+      const res = await fetch("/api/reservar", {
+        method: "POST",
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(dados)
+      });
+      const data = await res.json();
+      document.getElementById("linkPagamento").innerHTML = `
+        <p><strong>Link de Pagamento:</strong></p>
+        <a href="${data.link}" target="_blank">${data.link}</a>
+      `;
+    });
+
+    document.getElementById("formCancelar").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const reserva_id = e.target.reserva_id.value;
+      const res = await fetch(`/api/cancelar/${reserva_id}`, { method: "DELETE" });
+      const data = await res.json();
+      document.getElementById("statusCancelamento").innerText = data.mensagem;
+    });
+
+    document.getElementById("formPromocoes").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const clienteId = form.cliente_id.value.trim();
+      const destinos = Array.from(form.querySelectorAll("input[name=destinos]:checked")).map(cb => cb.value);
+
+      if (clienteId === "" || destinos.length === 0) {
+        alert("Preencha o ID e selecione ao menos um destino.");
+        return;
+      }
+
+      await fetch(`/api/interesse/${clienteId}`, {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ destinos })
+      });
+
+      const eventSource = new EventSource(`/api/notificacoes/${clienteId}`);
+      const container = document.getElementById("notificacoes");
+      container.innerHTML = "";
+
+      eventSource.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        if (data.tipo === "promocao") {
+          const div = document.createElement("div");
+          div.classList.add("alerta");
+          div.innerHTML = `<strong>${data.titulo}</strong><br>${data.descricao}<br><small>Válido até: ${data.validade}</small>`;
+          container.prepend(div);
+        }
+      };
+
+      eventSource.onerror = function(err) {
+        console.error("Erro SSE", err);
+        eventSource.close();
+      };
+    });
+
+    function cancelarInteresse() {
+      const clienteId = document.querySelector("#formPromocoes input[name=cliente_id]").value;
+      const destinos = Array.from(document.querySelectorAll("input[name=destinos]:checked")).map(cb => cb.value);
+
+      if (!clienteId || destinos.length === 0) {
+        alert("Preencha o ID e selecione ao menos um destino para cancelar.");
+        return;
+      }
+
+      fetch(`/api/interesse/${clienteId}`, {
+        method: "DELETE",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ destinos })
+      });
+
+      document.getElementById("notificacoes").innerHTML = "<p>Interesse cancelado nos destinos selecionados.</p>";
+    }
   </script>
 </body>
 </html>

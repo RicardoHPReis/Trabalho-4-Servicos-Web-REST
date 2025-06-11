@@ -5,9 +5,6 @@ import pika
 import json
 import uuid
 
-
-bilhetes = utils.carregar_dados('./json/bilhetes.json')
-
 connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
 channel = connection.channel()
 channel.queue_declare(queue="pagamento-aprovado", durable=True)
@@ -24,11 +21,9 @@ def callback(ch, method, properties, body):
         "bilhete_id": bilhete_id,
         "reserva_id": reserva_id,
         "client_id": client_id,
-        "horario": datetime.datetime.now().isoformat(),
+        "horario": datetime.datetime.now().isoformat()
     }
-    bilhetes = utils.adicionar_dado('./json/bilhetes.json', bilhete_id, bilhete)
-
-    bilhetes[bilhete_id] = bilhete
+    utils.adicionar_dado('./json/bilhetes.json', bilhete_id, bilhete)
 
     channel.basic_publish(
         exchange='',

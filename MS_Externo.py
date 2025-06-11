@@ -20,7 +20,7 @@ def simular_pagamento():
 
 
 def processar_pagamento(pagamento_id, callback_url, reserva_id, client_id):
-    time.sleep(3)  # Simula tempo de processamento externo
+    time.sleep(3)
     status = "aprovado" if uuid.uuid4().int % 2 == 0 else "recusado"
 
     requests.post(callback_url, json={
