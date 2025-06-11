@@ -9,7 +9,7 @@
         "porto_embarque": "Porto de Santos",
         "porto_retorno": "Porto de Santos",
         "lugares": ["Aruba", "Curaçao", "Barbados"],
-        "num_cabines": 50
+        "cabines_disponiveis": 50
     },
     "mediterraneo": {
         "id": "2",
@@ -21,7 +21,7 @@
         "porto_embarque": "Porto de Barcelona",
         "porto_retorno": "Porto de Barcelona",
         "lugares": ["Grécia", "Itália", "Croácia"],
-        "num_cabines": 50        
+        "cabines_disponiveis": 50        
     },
     "alasca": {
         "id": "3",
@@ -33,7 +33,7 @@
         "porto_embarque": "Porto de Seattle",
         "porto_retorno": "Porto de Seattle",
         "lugares": ["Juneau", "Glacier Bay", "Ketchikan"],
-        "num_cabines": 50
+        "cabines_disponiveis": 50
     },
     "nordeste": {
         "id": "4",
@@ -45,7 +45,7 @@
         "porto_embarque": "Porto de Recife",
         "porto_retorno": "Porto de Recife",
         "lugares": ["Fernando de Noronha", "Porto de Galinhas", "Maragogi"],
-        "num_cabines": 50
+        "cabines_disponiveis": 50
     },
     "asia": {
         "id": "5",
@@ -57,7 +57,7 @@
         "porto_embarque": "Porto de Singapura",
         "porto_retorno": "Porto de Singapura",
         "lugares": ["Tailândia", "Vietnã", "Malásia"],
-        "num_cabines": 50
+        "cabines_disponiveis": 50
     },
     "antartida": {
         "id": "6",
@@ -69,7 +69,7 @@
         "porto_embarque": "Porto de Ushuaia",
         "porto_retorno": "Porto de Ushuaia",
         "lugares": ["Península Antártica", "Ilhas Shetland do Sul", "Canal Lemaire"],
-        "num_cabines": 50
+        "cabines_disponiveis": 50
     },
     "fiordes": {
         "id": "7",
@@ -81,6 +81,6 @@
         "porto_embarque": "Porto de Bergen",
         "porto_retorno": "Porto de Bergen",
         "lugares": ["Sognefjord", "Geirangerfjord", "Alesund"],
-        "num_cabines": 50
+        "cabines_disponiveis": 50
     }
 }

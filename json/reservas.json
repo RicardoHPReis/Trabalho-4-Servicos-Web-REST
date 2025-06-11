@@ -1,0 +1,24 @@
+{
+    "RES-174B23CE": {
+        "reserva_id": "RES-174B23CE",
+        "valor": 13000.0,
+        "num_cabines": 1,
+        "num_passageiros": 2,
+        "link_pagamento": "http://localhost:5000/pagar/RES-174B23CE"
+    },
+    "RES-D796D115": {
+        "reserva_id": "RES-D796D115",
+        "valor": 19500.0,
+        "num_cabines": 2,
+        "num_passageiros": 3,
+        "link_pagamento": "http://localhost:5000/pagar/RES-D796D115"
+    },
+    "RES-D5E29004": {
+        "reserva_id": "RES-D5E29004",
+        "valor": 6600.0,
+        "num_cabines": 1,
+        "num_passageiros": 3,
+        "horario": "2025-06-10T21:56:43.473836",
+        "link_pagamento": "http://localhost:5000/pagar/RES-D5E29004"
+    }
+}

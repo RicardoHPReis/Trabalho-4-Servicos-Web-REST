@@ -4,7 +4,7 @@ import time as t
 import os
 
 pasta_sistema = os.path.dirname(os.path.abspath(__file__))
-scripts = ["MS_Marketing.py", "MS_Reserva.py", "MS_Bilhete.py", "MS_Pagamento.py", "MS_Itinerario.py"]  
+scripts = ["MS_Reserva.py","MS_Marketing.py", "MS_Itinerarios.py", "MS_Bilhete.py", "MS_Pagamentos.py", "MS_Externo.py"]  
 
 def abrir_terminal(script_path):
     sub.Popen(f'start cmd /k python "{script_path}"', shell=True)
@@ -17,7 +17,8 @@ for script in scripts:
 t.sleep(5)
 
 # Abre o navegador na porta do Assinante (5000)
-web.open('http://localhost:5000')
+sub.Popen(f'start cmd /k python -m http.server 8080', shell=True)
+web.open('http://localhost:8080')
 
 # rabbitmqctl stop_app
 # rabbitmqctl reset
