@@ -21,8 +21,8 @@ def publicar_promocao():
         "titulo": data["titulo"],
         "descricao": data["descricao"],
         "destino": data["destino"],
-        "desconto": data["desconto"],
-        "horario": datetime.datetime.now().isoformat()
+        "desconto": data["desconto"]
+        #"horario": datetime.datetime.now().isoformat()
     }
     utils.adicionar_dado('./json/promcoes.json', promocao_id, promocao)
 

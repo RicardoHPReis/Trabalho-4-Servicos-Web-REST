@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, Response, stream_with_context
+from flask import Flask, request, jsonify, render_template, Response, stream_with_context
 import shared.utils as utils
 import threading
 import requests
@@ -8,7 +8,11 @@ import pika
 import json
 import uuid
 
-app = Flask(__name__)
+app = Flask(
+    __name__,
+    static_folder="frontend/static",
+    template_folder="frontend/templates"
+)
 
 connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
 channel = connection.channel()
@@ -21,99 +25,135 @@ channel.queue_declare(queue='bilhete-gerado', durable=True)
 channel.queue_declare(queue='promocoes', durable=True)
 
 reservas = utils.carregar_dados('./json/reservas.json')
-interesses_clientes = set()
-sse_clientes = {}
+interesses = set()
+sse_clients = {}
 
+# Helper para enviar mensagens SSE
 def send_sse_message(client_id, message):
-    if client_id in sse_clientes:
-        for q in sse_clientes[client_id]:
+    if client_id in sse_clients:
+        for q in sse_clients[client_id]:
             try:
                 q.put(message)
-            except Exception:
+            except:
                 pass
 
+# Stream de eventos SSE
 def event_stream(client_id):
     q = queue.Queue()
-    if client_id not in sse_clientes:
-        sse_clientes[client_id] = []
-    sse_clientes[client_id].append(q)
+    sse_clients.setdefault(client_id, []).append(q)
     try:
         while True:
             msg = q.get()
             yield f"data: {json.dumps(msg)}\n\n"
     except GeneratorExit:
-        sse_clientes[client_id].remove(q)
-
-
-def callback(ch, method, properties, body):
-    routing_key = method.routing_key
-    event = json.loads(body)
-
-    if routing_key == 'pagamento-aprovado':
-        reserva_id = event['reserva_id']
-        client_id = event['client_id']
-        if reserva_id in reservas:
-            reservas[reserva_id]['status'] = 'aprovado'
-            reservas = utils.atualizar_dado("./json/reservas.json", reserva_id, 'status', 'aprovado')
-            send_sse_message(client_id, {'tipo': 'pagamento-aprovado', 'reserva_id': reserva_id})
-
-    elif routing_key == 'pagamento-recusado':
-        reserva_id = event['reserva_id']
-        client_id = event['client_id']
-        if reserva_id in reservas:
-            reservas[reserva_id]['status'] = 'recusado'
-            reservas = utils.atualizar_dado("./json/reservas.json", reserva_id, 'status', 'cancelada')
-            send_sse_message(client_id, {'tipo': 'pagamento-recusado', 'reserva_id': reserva_id})
-
-    elif routing_key == 'bilhete-gerado':
-        client_id = event['client_id']
-        send_sse_message(client_id, {'tipo': 'bilhete-gerado', 'bilhete': event})
-
-    elif routing_key == 'promocoes':
-        for client_id in interesses_clientes:
-            send_sse_message(client_id, {'tipo': 'promocao', 'promo': event})
-
+        if client_id in sse_clients:
+            sse_clients[client_id].remove(q)
 
 def consume_events():
-    channel.queue_declare(queue='pagamento-aprovado', durable=True)
-    channel.queue_declare(queue='pagamento-recusado', durable=True)
-    channel.queue_declare(queue='bilhete-gerado', durable=True)
-    channel.queue_declare(queue='promocoes', durable=True)
+    def callback(ch, method, properties, body):
+        routing_key = method.routing_key
+        event = json.loads(body)
+
+        if routing_key == 'pagamento-aprovado':
+            reserva_id = event['reserva_id']
+            client_id = event['client_id']
+            if reserva_id in reservas:
+                reservas[reserva_id]['status'] = 'pagamento aprovado'
+                send_sse_message(client_id, {
+                    'tipo': 'pagamento-aprovado', 
+                    'reserva_id': reserva_id
+                })
+
+        elif routing_key == 'pagamento-recusado':
+            reserva_id = event['reserva_id']
+            client_id = event['client_id']
+            if reserva_id in reservas:
+                reservas[reserva_id]['status'] = 'pagamento recusado'
+                send_sse_message(client_id, {
+                    'tipo': 'pagamento-recusado', 
+                    'reserva_id': reserva_id
+                })
+
+        elif routing_key == 'bilhete-gerado':
+            client_id = event['client_id']
+            send_sse_message(client_id, {
+                'tipo': 'bilhete-gerado', 
+                'bilhete': event
+            })
+
+        elif routing_key == 'promocoes':
+            for client_id in interesses:
+                send_sse_message(client_id, {
+                    'tipo': 'promocao', 
+                    'promo': event
+                })
 
     channel.basic_consume(queue='pagamento-aprovado', on_message_callback=callback, auto_ack=True)
     channel.basic_consume(queue='pagamento-recusado', on_message_callback=callback, auto_ack=True)
     channel.basic_consume(queue='bilhete-gerado', on_message_callback=callback, auto_ack=True)
     channel.basic_consume(queue='promocoes', on_message_callback=callback, auto_ack=True)
-
+    
+    print("[MS Reserva] Consumidor RabbitMQ iniciado")
     channel.start_consuming()
 
 
 threading.Thread(target=consume_events, daemon=True).start()
 
 
-@app.route('/consultar-itinerarios', methods=['POST'])
+@app.route("/", endpoint='index')
+def page_index():
+    return render_template("index.html")
+
+@app.route("/consultar", endpoint='consultar')
+def page_consultar():
+    return render_template("consultar.html")
+
+@app.route("/reservar", endpoint='reservar')
+def page_reservar():
+    return render_template("reservar.html")
+
+@app.route("/cancelar", endpoint='cancelar')
+def page_cancelar():
+    return render_template("cancelar.html")
+
+@app.route("/promocoes", endpoint='promocoes')
+def page_promocoes():
+    return render_template("promocoes.html")
+
+# Endpoints REST
+@app.route('/api/itinerarios', methods=['GET'])
 def consultar_itinerarios():
-    dados = request.json
-    resp = requests.post('http://localhost:5001/itinerarios', json=dados)
-    return jsonify(resp.json()), 200
+    destino = request.args.get('destino')
+    data = request.args.get('data')
+    porto = request.args.get('porto')
+    
+    # Chama MS Itinerários
+    params = {}
+    if destino: params['destino'] = destino
+    if data: params['data'] = data
+    if porto: params['porto'] = porto
+    
+    resp = requests.get('http://localhost:5001/itinerarios', params=params)
+    return jsonify(resp.json())
 
-
-@app.route('/efetuar-reserva', methods=['POST'])
+@app.route('/api/reservar', methods=['POST'])
 def efetuar_reserva():
-    dados = request.json
-    reserva_id = f"RES-{str(uuid.uuid4().hex[:8].upper())}"
+    data = request.json
+    reserva_id = str(uuid.uuid4())
+    
     reserva = {
         'reserva_id': reserva_id,
-        'itinerario_id': dados['itinerario_id'],
-        'client_id': dados['client_id'],
-        'data_embarque': dados['data_embarque'],
-        'passageiros': dados['passageiros'],
-        'cabines': dados['cabines'],
-        'status': 'pendente',
-        "horario": datetime.datetime.now().isoformat()
+        'itinerario_id': data['itinerario_id'],
+        'data_embarque': data.get('data_embarque', '2025-01-01'),  # Default value
+        'passageiros': int(data['passageiros']),
+        'cabines': int(data['cabines']),
+        'client_id': data['client_id'],
+        'valor': float(data['valor']),
+        'status': 'pendente'
     }
     reservas[reserva_id] = reserva
 
+    # Publica evento de reserva criada
     channel.basic_publish(
         exchange='',
         routing_key='reserva-criada',
@@ -121,65 +161,80 @@ def efetuar_reserva():
         properties=pika.BasicProperties(delivery_mode=2)
     )
 
+    # Solicita pagamento ao MS Pagamentos
     pagamento_req = {
         'reserva_id': reserva_id,
-        'client_id': dados['client_id'],
-        'valor': dados['valor'],
-        "horario": datetime.datetime.now().isoformat()
+        #'client_id': dados['client_id'],
+        'valor': reserva['valor'],
+        'client_id': reserva['client_id']
     }
     resp = requests.post('http://localhost:5002/pagamento', json=pagamento_req)
     link_pagamento = resp.json().get('link_pagamento', '')
 
-    return jsonify({'reserva_id': reserva_id, 'link_pagamento': link_pagamento}), 200
+    return jsonify({
+        'reserva_id': reserva_id,
+        'link_pagamento': link_pagamento
+    })
 
-@app.route('/cancelar-reserva', methods=['POST'])
+@app.route('/api/cancelar-reserva', methods=['POST'])
 def cancelar_reserva():
-    dados = request.json
-    reserva_id = dados.get('reserva_id')
+    data = request.json
+    reserva_id = data.get('reserva_id')
+    client_id = data.get('client_id')
+    
     if not reserva_id or reserva_id not in reservas:
         return jsonify({'erro': 'Reserva não encontrada'}), 404
-
-    reservas = utils.atualizar_dado("./json/reservas.json", reserva_id, 'status', 'cancelada')
-
+    
+    if reservas[reserva_id]['client_id'] != client_id:
+        return jsonify({'erro': 'Reserva não pertence ao cliente'}), 403
+    
+    reservas[reserva_id]['status'] = 'cancelada'
+    utils.atualizar_dado("./json/reservas.json", reserva_id, 'status', 'cancelada')
+    
     channel.basic_publish(
         exchange='',
         routing_key='reserva-cancelada',
         body=json.dumps(reservas[reserva_id]),
         properties=pika.BasicProperties(delivery_mode=2)
     )
-    return jsonify({'mensagem': 'Reserva cancelada'}), 200
+    return jsonify({'mensagem': 'Reserva cancelada com sucesso'}), 200
 
-
-@app.route("/reservas/<client_id>", methods=["GET"])
+@app.route('/api/reservas/<client_id>', methods=['GET'])
 def listar_reservas(client_id):
-    reservas_cliente = [r for r in reservas.values() if r["client_id"] == client_id]
-    return jsonify(reservas_cliente), 200
+    user_reservas = [r for r in reservas.values() if r['client_id'] == client_id]
+    return jsonify(user_reservas), 200
 
-
-@app.route('/registrar-interesse', methods=['POST'])
+@app.route('/api/registrar-interesse', methods=['POST'])
 def registrar_interesse():
-    dados = request.json
-    client_id = dados.get('client_id')
+    data = request.json
+    client_id = data.get('client_id')
+    
     if not client_id:
         return jsonify({'erro': 'client_id obrigatório'}), 400
-    interesses_clientes.add(client_id)
-    return jsonify({'mensagem': f'Interesse registrado para {client_id}'}), 200
+    
+    interesses.add(client_id)
+    return jsonify({'mensagem': f'Interesse registrado para {client_id}'})
 
-
-@app.route('/cancelar-interesse', methods=['POST'])
+@app.route('/api/cancelar-interesse', methods=['POST'])
 def cancelar_interesse():
-    dados = request.json
-    client_id = dados.get('client_id')
+    data = request.json
+    client_id = data.get('client_id')
+    
     if not client_id:
         return jsonify({'erro': 'client_id obrigatório'}), 400
-    interesses_clientes.discard(client_id)
-    return jsonify({'mensagem': f'Interesse cancelado para {client_id}'}), 200
+    
+    if client_id in interesses:
+        interesses.remove(client_id)
+    
+    return jsonify({'mensagem': f'Interesse cancelado para {client_id}'})
 
-
-@app.route('/eventos/<client_id>')
-def eventos(client_id):
-    return Response(stream_with_context(event_stream(client_id)), mimetype='text/event-stream')
-
+# Endpoint SSE para notificações
+@app.route('/api/notificacoes/<client_id>')
+def sse_events(client_id):
+    return Response(
+        stream_with_context(event_stream(client_id)),
+        mimetype='text/event-stream'
+    )
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

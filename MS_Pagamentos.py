@@ -14,8 +14,8 @@ pagamentos = utils.carregar_dados('./json/pagamentos.json')
 connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
 channel = connection.channel()
 
-channel.queue_declare(queue="sd4-pagamento-aprovado", durable=True)
-channel.queue_declare(queue="sd4-pagamento-recusado", durable=True)
+channel.queue_declare(queue="pagamento-aprovado", durable=True)
+channel.queue_declare(queue="pagamento-recusado", durable=True)
 
 
 @app.route("/pagamento", methods=["POST"])
@@ -67,16 +67,38 @@ def processar_pagamento(pagamento_id):
         "assinatura": assinatura.hex()
     }
 
-    fila = "sd4-pagamento-aprovado" if status == "aprovado" else "sd4-pagamento-recusado"
+    fila = "pagamento-aprovado" if status == "aprovado" else "pagamento-recusado"
     channel.basic_publish(
         exchange='',
         routing_key=fila,
         body=json.dumps(evento),
         properties=pika.BasicProperties(delivery_mode=2)
     )
+    
+    return jsonify({"status": status}), 200
 
-    return jsonify({"status": status})
-
+@app.route("/webhook", methods=["POST"])
+def webhook():
+    data = request.json
+    pagamento_id = data["pagamento_id"]
+    status = data["status"]
+    
+    if pagamento_id in pagamentos:
+        pagamentos[pagamento_id]["status"] = status
+        
+        # Publica evento correto
+        fila = "pagamento-aprovado" if status == "aprovado" else "pagamento-recusado"
+        channel.basic_publish(
+            exchange='',
+            routing_key=fila,
+            body=json.dumps({
+                "reserva_id": pagamentos[pagamento_id]["reserva_id"],
+                "client_id": pagamentos[pagamento_id]["client_id"]
+            }),
+            properties=pika.BasicProperties(delivery_mode=2)
+        )
+        return jsonify({"status": "recebido"})
+    return jsonify({"erro": "Pagamento não encontrado"}), 404
 
 if __name__ == '__main__':
     app.run(debug=True, port=5002)

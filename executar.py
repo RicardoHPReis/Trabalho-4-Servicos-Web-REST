@@ -17,8 +17,7 @@ for script in scripts:
 t.sleep(5)
 
 # Abre o navegador na porta do Assinante (5000)
-sub.Popen(f'start cmd /k python -m http.server 8080', shell=True)
-web.open('http://localhost:8080')
+web.open('http://localhost:5000')
 
 # rabbitmqctl stop_app
 # rabbitmqctl reset

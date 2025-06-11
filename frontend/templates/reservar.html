@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Efetuar Reserva</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header><h1>Efetuar Reserva</h1></header>
+  <nav><a href="{{ url_for('index') }}">Início</a></nav>
+  <section>
+    <form id="reserva-form">
+      <label>ID do Itinerário: <input type="text" name="itinerario_id" required></label>
+      <label>Data de Embarque: <input type="date" name="data_embarque" required></label>
+      <label>Passageiros: <input type="number" name="passageiros" min="1" required></label>
+      <label>Cabines: <input type="number" name="cabines" min="1" required></label>
+      <label>Valor Total: <input type="number" name="valor" min="0" step="0.01" required></label>
+      
+      <button type="submit">Reservar</button>
+    </form>
+    <div id="link-pagamento"></div>
+  </section>
+  <script>
+    document.getElementById("reserva-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const form = new FormData(e.target);
+      const data = {
+        itinerario_id: form.get('itinerario_id'),
+        passageiros: parseInt(form.get('passageiros')),
+        cabines: parseInt(form.get('cabines')),
+        valor: parseFloat(form.get('valor')),
+        client_id: localStorage.getItem('client_id') || 'cli-' + Math.random().toString(36).substr(2, 9)
+      };
+      const res = await fetch('/api/reservar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const json = await res.json();
+      document.getElementById('link-pagamento').innerHTML = `<a href="${json.link_pagamento}" target="_blank">${json.link_pagamento}</a>`;
+    });
+  </script>
+</body>
+</html>

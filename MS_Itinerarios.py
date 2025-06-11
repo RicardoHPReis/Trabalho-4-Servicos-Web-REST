@@ -6,26 +6,47 @@ import json
 
 app = Flask(__name__)
 
-itinerarios = utils.carregar_dados("./json/itinerarios.json")
+#itinerarios = utils.carregar_dados("./json/itinerarios.json")
 
+itinerarios_db = [
+    {
+        "id": "it1",
+        "destino": "Bahamas",
+        "data_embarque": "2025-08-01",
+        "porto_embarque": "Miami",
+        "navio": "Sea Explorer",
+        "lugares_visitados": ["Nassau", "CocoCay"],
+        "noites": 5,
+        "valor": 2000,
+        "cabines_disponiveis": 10
+    },
+    {
+        "id": "it2",
+        "destino": "Mediterrâneo",
+        "data_embarque": "2025-08-10",
+        "porto_embarque": "Barcelona",
+        "navio": "Ocean Spirit",
+        "lugares_visitados": ["Roma", "Atenas", "Santorini"],
+        "noites": 7,
+        "valor": 3200,
+        "cabines_disponiveis": 8
+    }
+]
+
+# Conexão com RabbitMQ
 connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
 channel = connection.channel()
 
 def callback(ch, method, properties, body):
     msg = json.loads(body)
-    tipo = method.routing_key
-    itinerario_id = msg["itinerario_id"]
-    
-    if tipo == "reserva-criada":
-        for it in itinerarios.keys():
-            if it == itinerario_id:
-                it["cabines_disponiveis"] -= int(msg["cabines"])
-                utils.atualizar_dado("./json/itinerarios.json", itinerarios)
-    elif tipo == "reserva-cancelada":
-        for it in itinerarios.keys():
-            if it == itinerario_id:
-                it["cabines_disponiveis"] += int(msg["cabines"])
-                utils.atualizar_dado("./json/itinerarios.json", itinerarios)
+    if method.routing_key == "reserva-criada":
+        for it in itinerarios_db:
+            if it["id"] == msg["itinerario_id"]:
+                it["cabines_disponiveis"] -= msg["cabines"]
+    elif method.routing_key == "reserva-cancelada":
+        for it in itinerarios_db:
+            if it["id"] == msg["itinerario_id"]:
+                it["cabines_disponiveis"] += msg["cabines"]
 
 def start_consumer():
     channel.queue_declare(queue="reserva-criada", durable=True)
@@ -40,16 +61,16 @@ def start_consumer():
 threading.Thread(target=start_consumer, daemon=True).start()
 
 
-@app.route("/itinerarios", methods=["POST"])
+@app.route("/itinerarios", methods=["GET"])
 def consultar():
-    dados = request.json
-    destino = dados.get("destino")
-    data = dados.get("data_embarque")
-    porto = dados.get("porto_embarque")
-
+    destino = request.args.get("destino")
+    data = request.args.get("data")
+    porto = request.args.get("porto")
+    
     resultados = [
         {
             "id": it["id"],
+            "destino": it["destino"],
             "data": it["data_embarque"],
             "navio": it["navio"],
             "porto_embarque": it["porto_embarque"],
@@ -58,14 +79,12 @@ def consultar():
             "valor": it["valor"],
             "cabines_disponiveis": it["cabines_disponiveis"]
         }
-        for it in itinerarios
+        for it in itinerarios_db
         if (not destino or it["destino"] == destino) and
            (not data or it["data_embarque"] == data) and
            (not porto or it["porto_embarque"] == porto)
     ]
-
     return jsonify(resultados)
-
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)

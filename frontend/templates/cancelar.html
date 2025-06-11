@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Cancelar Reserva</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header><h1>Cancelar Reserva</h1></header>
+  <nav><a href="{{ url_for('index') }}">Início</a></nav>
+  <section>
+    <form id="cancelar-form">
+      <label>ID da Reserva: <input type="text" name="reserva_id" required></label>
+      <button type="submit">Cancelar</button>
+    </form>
+    <div id="status-cancelamento"></div>
+  </section>
+
+<script>
+    document.getElementById("cancelar-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const reserva_id = e.target.reserva_id.value;
+        const client_id = localStorage.getItem('client_id') || '';
+        
+        const res = await fetch('/api/cancelar-reserva', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reserva_id, client_id })
+        });
+        
+        const data = await res.json();
+        document.getElementById("status-cancelamento").innerText = data.mensagem;
+    });
+</script>
+</body>
+</html>

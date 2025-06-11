@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Consultar Itinerários</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header><h1>Consultar Itinerários</h1></header>
+  <nav><a href="{{ url_for('index') }}">Início</a></nav>
+  <section>
+    <form id="consulta-form">
+      <label>Destino: <input type="text" name="destino"></label>
+      <label>Data de Embarque: <input type="date" name="data"></label>
+      <label>Porto de Embarque: <input type="text" name="porto"></label>
+      <button type="submit">Buscar</button>
+    </form>
+    <div id="resultados-consulta"></div>
+  </section>
+  <script>
+    
+    document.getElementById("consulta-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const dados = Object.fromEntries(new FormData(e.target));
+        
+        const params = new URLSearchParams();
+        if (dados.destino) params.append('destino', dados.destino);
+        if (dados.data) params.append('data', dados.data);
+        if (dados.porto) params.append('porto', dados.porto);
+        
+        const res = await fetch(`/api/itinerarios?${params}`);
+        const data = await res.json();
+        document.getElementById("resultados-consulta").innerText = JSON.stringify(data, null, 2);
+    });
+
+  </script>
+</body>
+</html>

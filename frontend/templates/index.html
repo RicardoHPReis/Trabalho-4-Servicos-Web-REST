@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Início - Cruzeiros</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header><h1>Bem-vindo à Reserva de Cruzeiros</h1></header>
+<nav>
+  <ul>
+    <li><a href="{{ url_for('index') }}" class="{{ 'active' if request.path == '/' }}">Início</a></li>
+    <li><a href="{{ url_for('consultar') }}" class="{{ 'active' if request.path == '/consultar' }}">Consultar Itinerários</a></li>
+    <li><a href="{{ url_for('reservar') }}" class="{{ 'active' if request.path == '/reservar' }}">Efetuar Reserva</a></li>
+    <li><a href="{{ url_for('cancelar') }}" class="{{ 'active' if request.path == '/cancelar' }}">Cancelar Reserva</a></li>
+    <li><a href="{{ url_for('promocoes') }}" class="{{ 'active' if request.path == '/promocoes' }}">Promoções</a></li>
+  </ul>
+</nav>
+  <section>
+    <p>Use o menu acima para navegar pelas funcionalidades.</p>
+  </section>
+</body>
+</html>
