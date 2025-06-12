@@ -144,7 +144,7 @@ def efetuar_reserva():
     reserva = {
         'reserva_id': reserva_id,
         'destino': data['destino'],
-        'data_embarque': data.get('data_embarque', '2025-01-01'),  # Default value
+        'data_embarque': data.get('data_embarque', '2025-01-01'),
         'passageiros': int(data['passageiros']),
         'cabines': int(data['cabines']),
         'client_id': data['client_id'],
@@ -167,14 +167,16 @@ def efetuar_reserva():
         'valor': reserva['valor'],
         "horario": datetime.datetime.now().isoformat()
     }
-    utils.adicionar_dado('./json/reservas.json', reserva_id, pagamento_req)
     resp = requests.post('http://localhost:5002/pagamento', json=pagamento_req)
     link_pagamento = resp.json().get('link_pagamento', '')
+    
+    if link_pagamento == "":
+        requests.post('http://localhost:5000/api/cancelar-reserva', json={'reserva_id': reserva_id, 'client_id': reserva['client_id']})
 
     return jsonify({
         'reserva_id': reserva_id,
         'link_pagamento': link_pagamento
-    })
+    }), 200
 
 @app.route('/api/cancelar-reserva', methods=['POST'])
 def cancelar_reserva():

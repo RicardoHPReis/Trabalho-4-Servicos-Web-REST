@@ -8,7 +8,7 @@ import uuid
 import json
 
 app = Flask(__name__)
-chave_privada_pagamento = utils.chave_privada()
+chave_publica_pagamento = utils.chave_publica()
 pagamentos = utils.carregar_dados('./json/pagamentos.json')
 
 connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
@@ -29,7 +29,7 @@ def gerar_pagamento():
         "pagamento_id": pagamento_id,
         "reserva_id": reserva_id,
         "valor": data.get("valor"),
-        "cliente_id": data.get("cliente_id"),
+        "client_id": data.get("client_id"),
         "horario": datetime.datetime.now().isoformat(),
         "status": "pendente"
     }
@@ -52,24 +52,35 @@ def gerar_pagamento():
 def webhook():
     data = request.json
     pagamento_id = data["pagamento_id"]
-    status = data["status"]
+    reserva_id = data["reserva_id"]
+    client_id = data["client_id"]
     assinatura = data["assinatura"]
+    status = data["status"]
+    pagamentos = utils.carregar_dados('./json/pagamentos.json')
     
-    if pagamento_id in pagamentos:
-        pagamentos[pagamento_id]["status"] = status
-        
-        fila = "pagamento-aprovado" if status == "aprovado" else "pagamento-recusado"
-        channel.basic_publish(
-            exchange='',
-            routing_key=fila,
-            body=json.dumps({
-                "reserva_id": pagamentos[pagamento_id]["reserva_id"],
-                "client_id": pagamentos[pagamento_id]["client_id"],
-            }),
-            properties=pika.BasicProperties(delivery_mode=2)
-        )
-        return jsonify({"status": "recebido"})
-    return jsonify({"erro": "Pagamento não encontrado"}), 404
+    #if pagamento_id in pagamentos:
+    #    return jsonify({"erro": "Pagamento não encontrado"}), 404
+    
+    #if not utils.verificar_assinatura(chave_publica_pagamento, assinatura, client_id):
+    #    return jsonify({"erro": "Assinatura incompatível"}), 404
+    
+    pagamentos[pagamento_id]["status"] = status
+    utils.salvar_dados("./json/pagamentos.json", pagamentos)
+    
+    fila = "pagamento-aprovado" if status == "aprovado" else "pagamento-recusado"
+    channel.basic_publish(
+        exchange='',
+        routing_key=fila,
+        body=json.dumps({
+            "reserva_id": reserva_id,
+            "client_id": client_id,
+            "assinatura": assinatura,
+            "status": status,
+        }),
+        properties=pika.BasicProperties(delivery_mode=2)
+    )
+    return jsonify({"status": "recebido"}), 200
+    
 
 if __name__ == '__main__':
     app.run(debug=True, port=5002)

@@ -17,16 +17,20 @@ def simular_pagamento():
     client_id = data["client_id"]
     reserva_id = data["reserva_id"]
 
-    threading.Thread(target=processar_pagamento, args=(pagamento_id, callback_url, reserva_id, client_id)).start()
+    threading.Thread(target=processar_pagamento, args=(callback_url, pagamento_id, reserva_id, client_id)).start()
     return jsonify({"link_pagamento": f"http://localhost:5004/pagar/{pagamento_id}"})
 
 
-def processar_pagamento(pagamento_id, callback_url, reserva_id, client_id):
+def processar_pagamento(callback_url, pagamento_id, reserva_id, client_id):
     aprovado = random.choice([True, False])
-    status = "aprovado" if aprovado else "recusado"
+    status = "aprovado" #if aprovado else "recusado"
+    assinatura = utils.assinar_mensagem(chave_privada_pagamento, client_id)
 
     requests.post(callback_url, json={
         "pagamento_id": pagamento_id,
+        "reserva_id": reserva_id,
+        "client_id": client_id,
+        "assinatura": assinatura.hex(),
         "status": status
     })
 

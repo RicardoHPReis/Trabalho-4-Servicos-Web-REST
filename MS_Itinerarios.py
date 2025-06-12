@@ -9,13 +9,14 @@ app = Flask(__name__)
 
 itinerarios = utils.carregar_dados("./json/itinerarios.json")
 
-# Conexão com RabbitMQ
 connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
 channel = connection.channel()
+channel.queue_declare(queue="reserva-criada", durable=True)
+channel.queue_declare(queue="reserva-cancelada", durable=True)
 
 def callback(ch, method, properties, body):
     msg = json.loads(body)
-    destino = unidecode.unidecode(msg["destino"].lower().strip())
+    destino = msg["destino"].lower()
     if method.routing_key == "reserva-criada":
         if destino in itinerarios:
             itinerarios[destino]["cabines_disponiveis"] -= msg["cabines"]
@@ -26,9 +27,6 @@ def callback(ch, method, properties, body):
             utils.salvar_dados("./json/itinerarios.json", itinerarios)
 
 def start_consumer():
-    channel.queue_declare(queue="reserva-criada", durable=True)
-    channel.queue_declare(queue="reserva-cancelada", durable=True)
-
     channel.basic_consume("reserva-criada", callback, auto_ack=True)
     channel.basic_consume("reserva-cancelada", callback, auto_ack=True)
 

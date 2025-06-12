@@ -44,5 +44,53 @@
         "cliente_id": null,
         "horario": "2025-06-11T20:27:56.066757",
         "status": "pendente"
+    },
+    "PAG-704F75E2": {
+        "pagamento_id": "PAG-704F75E2",
+        "reserva_id": "RES-5F0BEBD0",
+        "valor": 4000,
+        "cliente_id": null,
+        "horario": "2025-06-11T23:04:23.155769",
+        "status": "pendente"
+    },
+    "PAG-3F1A7030": {
+        "pagamento_id": "PAG-3F1A7030",
+        "reserva_id": "RES-FF4B0DE0",
+        "valor": 8000,
+        "cliente_id": null,
+        "horario": "2025-06-12T00:21:30.945966",
+        "status": "pendente"
+    },
+    "PAG-AE40CA22": {
+        "pagamento_id": "PAG-AE40CA22",
+        "reserva_id": "RES-26EB43D5",
+        "valor": 10000,
+        "cliente_id": null,
+        "horario": "2025-06-12T00:28:39.691659",
+        "status": "pendente"
+    },
+    "PAG-BB1CD26D": {
+        "pagamento_id": "PAG-BB1CD26D",
+        "reserva_id": "RES-E3EE918A",
+        "valor": 12000,
+        "client_id": "cli-bggjwsou2",
+        "horario": "2025-06-12T00:36:29.596969",
+        "status": "pendente"
+    },
+    "PAG-B720F1F5": {
+        "pagamento_id": "PAG-B720F1F5",
+        "reserva_id": "RES-3AC20F50",
+        "valor": 12000,
+        "client_id": "cli-bggjwsou2",
+        "horario": "2025-06-12T00:41:25.279353",
+        "status": "pendente"
+    },
+    "PAG-F143F3C9": {
+        "pagamento_id": "PAG-F143F3C9",
+        "reserva_id": "RES-CF2249E8",
+        "valor": 12000,
+        "client_id": "cli-bggjwsou2",
+        "horario": "2025-06-12T00:44:24.224971",
+        "status": "aprovado"
     }
 }
