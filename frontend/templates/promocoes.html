@@ -1,54 +1,90 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Promoções</title>
+  <title>Notificações de Promoções de Cruzeiros</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <header><h1>Promoções em Tempo Real</h1></header>
-  <nav><a href="{{ url_for('index') }}">Início</a></nav>
-  <section>
-    <fieldset>
-      <legend>Destinos:</legend>
-      <label><input type="checkbox" name="destinos" value="rio"> Rio de Janeiro</label>
-      <label><input type="checkbox" name="destinos" value="buzios"> Búzios</label>
-      <label><input type="checkbox" name="destinos" value="ilhabela"> Ilhabela</label>
-    </fieldset>
-    <button id="registrar">Registrar Interesse</button>
-    <button id="cancelar">Cancelar Interesse</button>
-    <div id="notificacoes"></div>
-  </section>
-<script>
-    let client_id = localStorage.getItem('client_id');
-    if (!client_id) {
-        client_id = 'cli-' + Math.random().toString(36).substr(2, 9);
-        localStorage.setItem('client_id', client_id);
-    }
-    
-    document.getElementById("registrar").onclick = async () => {
-        const res = await fetch('/api/registrar-interesse', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ client_id })
-        });
-        
-        const eventSource = new EventSource(`/api/notificacoes/${client_id}`);
-        eventSource.onmessage = (e) => {
-            const msg = JSON.parse(e.data);
-            const div = document.createElement("div");
-            div.innerHTML = `<strong>${msg.promo.titulo}</strong><br>${msg.promo.descricao}`;
-            document.getElementById("notificacoes").prepend(div);
-        };
-    };
+    <header><h1>Notificações de Promoções de Cruzeiros</h1></header>
+    <nav>
+        <ul>
+        <li><a href="{{ url_for('index') }}">Início</a></li>
+        <li><a href="{{ url_for('consultar') }}">Consultar Itinerários</a></li>
+        <li><a href="{{ url_for('reservar') }}">Efetuar Reserva</a></li>
+        <li><a href="{{ url_for('cancelar') }}">Cancelar Reserva</a></li>
+        <li><a href="{{ url_for('promocoes') }}" class="active">Promoções</a></li>
+        </ul>
+    </nav>
+    <button onclick="registrarInteresse()">Registrar Interesse</button>
+    <button onclick="cancelarInteresse()">Cancelar Interesse</button>
 
-    document.getElementById("cancelar").onclick = async () => {
-        await fetch('/api/cancelar-interesse', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ client_id })
-        });
-    };
-</script>
+    <h2>Promoções Recentes</h2>
+    <div id="promocoes"></div>
+
+    <script>
+        let clienteId = localStorage.getItem('client_id');
+        if (!clienteId) {
+            clienteId = 'cli-' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('client_id', clienteId);
+        }
+
+        const urlBase = 'http://localhost:5000';
+
+        const eventSource = new EventSource(`${urlBase}/api/notificacoes/${clienteId}`);
+        eventSource.onmessage = (event) => {
+            const msg = JSON.parse(event.data);
+            if (msg.tipo === "promocao") {
+                adicionarPromocao(msg.promo);
+            }
+        };
+
+        function adicionarPromocao(promo) {
+            const div = document.createElement("div");
+            div.className = "promo-card";
+            div.innerHTML = `
+                <h3>${promo.titulo}</h3>
+                <p>${promo.descricao}</p>
+                <p class="validade">Validade: ${promo.validade}</p>
+            `;
+            document.getElementById("promocoes").prepend(div);
+        }
+
+        async function registrarInteresse() {
+            const res = await fetch(`${urlBase}/api/registrar-interesse`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ client_id: clienteId })
+            });
+            
+            if (res.ok) {
+                alert("Agora você receberá notificações de promoções!");
+                const promoRes = await fetch(`${urlBase}/api/promocoes`);
+                const dados = await promoRes.json();
+                
+                if (Array.isArray(dados)) {
+                    dados.forEach(promo => {
+                        adicionarPromocao(promo);
+                    });
+                }
+            } else {
+                alert("Erro ao registrar interesse");
+            }
+        }
+
+        async function cancelarInteresse() {
+            const res = await fetch(`${urlBase}/api/cancelar-interesse`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ client_id: clienteId })
+            });
+            
+            if (res.ok) {
+                alert("Você não receberá mais promoções");
+                document.getElementById("promocoes").innerHTML = '';
+            } else {
+                alert("Erro ao cancelar interesse");
+            }
+        }
+    </script>
 </body>
 </html>

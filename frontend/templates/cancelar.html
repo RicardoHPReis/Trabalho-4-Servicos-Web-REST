@@ -1,3 +1,4 @@
+<!-- cancelar.html -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -7,30 +8,35 @@
 </head>
 <body>
   <header><h1>Cancelar Reserva</h1></header>
-  <nav><a href="{{ url_for('index') }}">Início</a></nav>
+  <nav>
+    <ul>
+      <li><a href="{{ url_for('index') }}">Início</a></li>
+      <li><a href="{{ url_for('consultar') }}">Consultar Itinerários</a></li>
+      <li><a href="{{ url_for('reservar') }}">Efetuar Reserva</a></li>
+      <li><a href="{{ url_for('cancelar') }}" class="active">Cancelar Reserva</a></li>
+      <li><a href="{{ url_for('promocoes') }}">Promoções</a></li>
+    </ul>
+  </nav>
   <section>
     <form id="cancelar-form">
       <label>ID da Reserva: <input type="text" name="reserva_id" required></label>
       <button type="submit">Cancelar</button>
     </form>
-    <div id="status-cancelamento"></div>
+    <div id="status-cancelamento" style="margin-top:1em"></div>
   </section>
-
-<script>
+  <script>
+    let client_id = localStorage.getItem('client_id') || '';
     document.getElementById("cancelar-form").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const reserva_id = e.target.reserva_id.value;
-        const client_id = localStorage.getItem('client_id') || '';
-        
-        const res = await fetch('/api/cancelar-reserva', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ reserva_id, client_id })
-        });
-        
-        const data = await res.json();
-        document.getElementById("status-cancelamento").innerText = data.mensagem;
+      e.preventDefault();
+      const reserva_id = e.target.reserva_id.value;
+      const res = await fetch('/api/cancelar-reserva', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reserva_id, client_id })
+      });
+      const data = await res.json();
+      document.getElementById("status-cancelamento").innerText = data.mensagem || data.erro;
     });
-</script>
+  </script>
 </body>
 </html>

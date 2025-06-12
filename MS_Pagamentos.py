@@ -51,22 +51,23 @@ def gerar_pagamento():
 @app.route("/webhook", methods=["POST"])
 def webhook():
     data = request.json
+    print("[Webhook recebido]", data)  # 👈 ADICIONE ISSO
+
     pagamento_id = data["pagamento_id"]
     reserva_id = data["reserva_id"]
     client_id = data["client_id"]
     assinatura = data["assinatura"]
     status = data["status"]
+
     pagamentos = utils.carregar_dados('./json/pagamentos.json')
     
-    #if pagamento_id in pagamentos:
-    #    return jsonify({"erro": "Pagamento não encontrado"}), 404
-    
-    #if not utils.verificar_assinatura(chave_publica_pagamento, assinatura, client_id):
-    #    return jsonify({"erro": "Assinatura incompatível"}), 404
+    if pagamento_id not in pagamentos:
+        print("[ERRO] Pagamento não encontrado:", pagamento_id)
+        return jsonify({"erro": "Pagamento não encontrado"}), 404
     
     pagamentos[pagamento_id]["status"] = status
     utils.salvar_dados("./json/pagamentos.json", pagamentos)
-    
+
     fila = "pagamento-aprovado" if status == "aprovado" else "pagamento-recusado"
     channel.basic_publish(
         exchange='',
@@ -79,7 +80,9 @@ def webhook():
         }),
         properties=pika.BasicProperties(delivery_mode=2)
     )
+    print(f"[Fila {fila}] publicada com sucesso para {reserva_id}")
     return jsonify({"status": "recebido"}), 200
+
     
 
 if __name__ == '__main__':

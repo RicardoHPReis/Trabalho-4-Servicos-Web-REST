@@ -38,9 +38,11 @@ threading.Thread(target=start_consumer, daemon=True).start()
 
 @app.route("/itinerarios", methods=["GET"])
 def consultar():
-    destino = unidecode.unidecode(request.args.get("destino").lower().strip())
+    destino = request.args.get("destino")
+    destino = unidecode.unidecode(destino.lower().strip()) if destino else None
     data = request.args.get("data")
     porto = request.args.get("porto")
+    itinerarios = utils.carregar_dados("./json/itinerarios.json")
     
     resultados = [
         {

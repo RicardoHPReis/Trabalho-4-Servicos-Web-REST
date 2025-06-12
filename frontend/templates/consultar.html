@@ -7,32 +7,91 @@
 </head>
 <body>
   <header><h1>Consultar Itinerários</h1></header>
-  <nav><a href="{{ url_for('index') }}">Início</a></nav>
+  <nav>
+    <ul>
+      <li><a href="{{ url_for('index') }}">Início</a></li>
+      <li><a href="{{ url_for('consultar') }}" class="active">Consultar Itinerários</a></li>
+      <li><a href="{{ url_for('reservar') }}">Efetuar Reserva</a></li>
+      <li><a href="{{ url_for('cancelar') }}">Cancelar Reserva</a></li>
+      <li><a href="{{ url_for('promocoes') }}">Promoções</a></li>
+    </ul>
+  </nav>
+
   <section>
     <form id="consulta-form">
-      <label>Destino: <input type="text" name="destino"></label>
-      <label>Data de Embarque: <input type="date" name="data"></label>
+      <label>Destino: <input type="text" id="destino" name="destino"></label>
+      <label>Data de Embarque: <input type="date" id="data" name="data"></label>
       <label>Porto de Embarque: <input type="text" name="porto"></label>
       <button type="submit">Buscar</button>
     </form>
-    <div id="resultados-consulta"></div>
-  </section>
-  <script>
-    
-    document.getElementById("consulta-form").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const dados = Object.fromEntries(new FormData(e.target));
-        
-        const params = new URLSearchParams();
-        if (dados.destino) params.append('destino', dados.destino);
-        if (dados.data) params.append('data', dados.data);
-        if (dados.porto) params.append('porto', dados.porto);
-        
-        const res = await fetch(`/api/itinerarios?${params}`);
-        const data = await res.json();
-        document.getElementById("resultados-consulta").innerText = JSON.stringify(data, null, 2);
-    });
 
+    <div class="resultados">
+      <table id="tabela-resultados" style="width:100%; margin-top:1em; display:none;">
+        <thead>
+          <tr>
+            <th>Destino</th>
+            <th>Data</th>
+            <th>Noites</th>
+            <th>Navio</th>
+            <th>Porto Embarque</th>
+            <th>Lugares</th>
+            <th>Valor (R$)</th>
+            <th>Cabines Disponíveis</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <script>
+    document.getElementById("consulta-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const destino = document.getElementById('destino').value.trim();
+      const data = document.getElementById('data').value.trim();
+      const porto = document.querySelector('[name="porto"]').value.trim();
+
+      const params = new URLSearchParams();
+      if (destino) params.append('destino', destino);
+      if (data) params.append('data', data);
+      if (porto) params.append('porto', porto);
+
+      try {
+        const res = await fetch(`/api/itinerarios?${params}`);
+        if (!res.ok) throw new Error('Erro ao consultar itinerários');
+        const lista = await res.json();
+
+        const tabela = document.getElementById('tabela-resultados');
+        const corpo = tabela.querySelector('tbody');
+        corpo.innerHTML = '';
+
+        if (lista.length === 0) {
+          tabela.style.display = 'none';
+          alert('Nenhum itinerário encontrado.');
+          return;
+        }
+
+        lista.forEach(it => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${it.destino}</td>
+            <td>${it.data}</td>
+            <td>${it.noites}</td>
+            <td>${it.navio}</td>
+            <td>${it.porto_embarque}</td>
+            <td>${it.lugares.join(', ')}</td>
+            <td>${it.valor.toFixed(2)}</td>
+            <td>${it.cabines_disponiveis}</td>
+          `;
+          corpo.appendChild(row);
+        });
+
+        tabela.style.display = '';
+      } catch (err) {
+        alert("Erro ao buscar itinerários. Verifique se os serviços estão ativos.");
+        console.error(err);
+      }
+    });
   </script>
 </body>
 </html>

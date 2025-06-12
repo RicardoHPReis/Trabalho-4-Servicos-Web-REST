@@ -1,40 +1,41 @@
 from flask import Flask, request, jsonify
 import shared.utils as utils
-import datetime
-import pika
 import json
+import pika
 import uuid
+import os
 
 app = Flask(__name__)
+promocoes = utils.carregar_dados('./json/marketing.json')
 
 connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
 channel = connection.channel()
-channel.queue_declare(queue="promocoes", durable=True)
+channel.queue_declare(queue='promocoes', durable=True)
 
-
-@app.route("/promocao", methods=["POST"])
+@app.route('/api/promocoes', methods=['POST'])
 def publicar_promocao():
-    data = request.json
-    promocao_id = f"PRM-{str(uuid.uuid4().hex[:8].upper())}"
-    promocao = {
-        "id": promocao_id,
-        "titulo": data["titulo"],
-        "descricao": data["descricao"],
-        "destino": data["destino"],
-        "desconto": data["desconto"]
-        #"horario": datetime.datetime.now().isoformat()
-    }
-    utils.adicionar_dado('./json/promcoes.json', promocao_id, promocao)
-
+    nova_promo = request.json
+    
+    promo_id = f"PROMO-{str(uuid.uuid4().hex[:8].upper())}"
+    promocoes[promo_id] = nova_promo
+    
+    promocoes = utils.adicionar_dado('./json/promocoes.json', promo_id, nova_promo)
+    
     channel.basic_publish(
         exchange='',
-        routing_key="promocoes",
-        body=json.dumps(promocao),
-        properties=pika.BasicProperties(delivery_mode=2)
+        routing_key='promocoes',
+        body=json.dumps(nova_promo)
     )
+    
+    return jsonify({
+        'status': 'Promoção publicada com sucesso',
+        'promo_id': promo_id
+    })
 
-    return jsonify({"mensagem": "Promoção publicada", "id": promocao_id}), 200
-
+# Endpoint para listar promoções
+@app.route('/api/promocoes', methods=['GET'])
+def listar_promocoes():
+    return jsonify(promocoes)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5003)
+    app.run(debug=True, threaded=True, port=5005)

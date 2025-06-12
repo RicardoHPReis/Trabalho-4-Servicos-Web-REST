@@ -7,26 +7,87 @@
 </head>
 <body>
   <header><h1>Efetuar Reserva</h1></header>
-  <nav><a href="{{ url_for('index') }}">Início</a></nav>
+  <nav>
+        <ul>
+        <li><a href="{{ url_for('index') }}">Início</a></li>
+        <li><a href="{{ url_for('consultar') }}">Consultar Itinerários</a></li>
+        <li><a href="{{ url_for('reservar') }}" class="active">Efetuar Reserva</a></li>
+        <li><a href="{{ url_for('cancelar') }}">Cancelar Reserva</a></li>
+        <li><a href="{{ url_for('promocoes') }}">Promoções</a></li>
+        </ul>
+    </nav>
   <section>
     <form id="reserva-form">
       <label>Destino: <input type="text" name="destino" required></label>
       <label>Data de Embarque: <input type="date" name="data_embarque" required></label>
       <label>Passageiros: <input type="number" name="passageiros" min="1" required></label>
-      <label>Cabines: <input type="number" name="cabines" min="1" required></label>      
+      <label>Cabines: <input type="number" name="cabines" min="1" required></label>
       <button type="submit">Reservar</button>
     </form>
-    <div id="link-pagamento"></div>
+    <div id="link-pagamento" style="margin-top:1em"></div>
+    <div id="status-reserva" style="margin-top:1em"></div>
   </section>
   <script>
+    let client_id = localStorage.getItem('client_id');
+    if (!client_id) {
+      client_id = 'cli-' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('client_id', client_id);
+    }
+
+    const es = new EventSource(`/api/notificacoes/${client_id}`);
+    es.onmessage = (e) => {
+      const msg = JSON.parse(e.data);
+      const statusDiv = document.getElementById('status-reserva');
+
+      if (msg.tipo === 'pagamento-aprovado') {
+        localStorage.setItem('pagamento_status', 'aprovado');
+        localStorage.setItem('reserva_id', msg.reserva_id);
+        statusDiv.innerHTML += `
+          <div class="notificacao sucesso">
+            <strong>✅ Pagamento aprovado!</strong><br>
+            Sua reserva está confirmada.<br>
+            <strong>ID da Reserva:</strong> ${msg.reserva_id}
+          </div>
+        `;
+      }
+
+      if (msg.tipo === 'pagamento-recusado') {
+        localStorage.setItem('pagamento_status', 'recusado');
+        localStorage.setItem('reserva_id', msg.reserva_id);
+        statusDiv.innerHTML += `
+          <div class="notificacao erro">
+            <strong>❌ Pagamento recusado.</strong><br>
+            Sua reserva foi automaticamente cancelada.<br>
+            <strong>ID da Reserva:</strong> ${msg.reserva_id}
+          </div>
+        `;
+      }
+
+      if (msg.tipo === 'bilhete-gerado') {
+        localStorage.setItem('bilhete_gerado', JSON.stringify(msg.bilhete));
+        const bilhete = msg.bilhete;
+        statusDiv.innerHTML += `
+          <div class="bilhete-card">
+            <h2>🎫 Bilhete Confirmado</h2>
+            <p><strong>ID do Bilhete:</strong> ${bilhete.bilhete_id}</p>
+            <p><strong>Reserva:</strong> ${bilhete.reserva_id}</p>
+            <p><strong>Cliente:</strong> ${bilhete.client_id}</p>
+            <p><strong>Destino:</strong> ${bilhete.destino}</p>
+            <p><strong>Data de Embarque:</strong> ${bilhete.data_embarque}</p>
+          </div>
+        `;
+      }
+    };
+
     document.getElementById("reserva-form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const form = new FormData(e.target);
       const data = {
         destino: form.get('destino'),
+        data_embarque: form.get('data_embarque'),
         passageiros: parseInt(form.get('passageiros')),
         cabines: parseInt(form.get('cabines')),
-        client_id: localStorage.getItem('client_id') || 'cli-' + Math.random().toString(36).substr(2, 9)
+        client_id
       };
       const res = await fetch('/api/reservar', {
         method: 'POST',
@@ -34,8 +95,44 @@
         body: JSON.stringify(data)
       });
       const json = await res.json();
-      document.getElementById('link-pagamento').innerHTML = `<a href="${json.link_pagamento}" target="_blank">${json.link_pagamento}</a>`;
+      localStorage.setItem('reserva_id', json.reserva_id);
+      document.getElementById('link-pagamento').innerHTML = `<a href="${json.link_pagamento}" target="_blank">Pagar Aqui</a>`;
     });
+
+    window.onload = () => {
+      const statusDiv = document.getElementById('status-reserva');
+      const reservaId = localStorage.getItem('reserva_id');
+
+      if (reservaId) {
+        fetch(`/api/status-reserva/${reservaId}`)
+          .then(res => res.json())
+          .then(r => {
+            if (r.status === 'aprovado') {
+              statusDiv.innerHTML += `
+                <div class="notificacao sucesso">
+                  ✅ Pagamento aprovado! Sua reserva está confirmada.<br>
+                  <strong>ID da Reserva:</strong> ${r.reserva_id}
+                </div>`;
+            } else if (r.status === 'recusado') {
+              statusDiv.innerHTML += `
+                <div class="notificacao erro">
+                  ❌ Pagamento recusado. A reserva foi cancelada.<br>
+                  <strong>ID da Reserva:</strong> ${r.reserva_id}
+                </div>`;
+            }
+            if (r.bilhete_id) {
+              statusDiv.innerHTML += `
+                <div class="bilhete-card">
+                  <h2>🎫 Bilhete Confirmado</h2>
+                  <p><strong>Bilhete:</strong> ${r.bilhete_id}</p>
+                  <p><strong>Destino:</strong> ${r.destino}</p>
+                  <p><strong>Data de Embarque:</strong> ${r.data_embarque}</p>
+                  <p><strong>ID Reserva:</strong> ${r.reserva_id}</p>
+                </div>`;
+            }
+          });
+      }
+    };
   </script>
 </body>
 </html>

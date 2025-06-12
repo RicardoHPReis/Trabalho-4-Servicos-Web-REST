@@ -13,10 +13,7 @@ for script in scripts:
     caminho_completo = os.path.join(pasta_sistema, script)
     abrir_terminal(caminho_completo)
 
-# Aguarda alguns segundos
 t.sleep(5)
-
-# Abre o navegador na porta do Assinante (5000)
 web.open('http://localhost:5000')
 
 # rabbitmqctl stop_app
