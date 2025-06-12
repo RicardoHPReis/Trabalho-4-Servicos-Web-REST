@@ -190,5 +190,21 @@
         "client_id": "cli-bggjwsou2",
         "horario": "2025-06-12T15:53:43.441774",
         "status": "aprovado"
+    },
+    "PAG-79F2E17C": {
+        "pagamento_id": "PAG-79F2E17C",
+        "reserva_id": "RES-15234A9C",
+        "valor": 17500.0,
+        "client_id": "cli-0g7qqgs07",
+        "horario": "2025-06-12T16:43:29.412065",
+        "status": "aprovado"
+    },
+    "PAG-5EEC5861": {
+        "pagamento_id": "PAG-5EEC5861",
+        "reserva_id": "RES-9BA6A59F",
+        "valor": 24500.0,
+        "client_id": "cli-0g7qqgs07",
+        "horario": "2025-06-12T16:44:34.622457",
+        "status": "aprovado"
     }
 }

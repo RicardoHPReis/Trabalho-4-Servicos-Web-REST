@@ -3,7 +3,6 @@ import shared.utils as utils
 import threading
 import requests
 import random
-import uuid
 
 app = Flask(__name__)
 chave_privada_pagamento = utils.chave_privada()

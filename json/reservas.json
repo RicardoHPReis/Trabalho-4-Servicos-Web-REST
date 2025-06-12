@@ -264,5 +264,28 @@
         "horario": "2025-06-12T15:53:41.412265",
         "status": "cancelada",
         "bilhete_id": "BLT-6FFF8C89"
+    },
+    "RES-15234A9C": {
+        "reserva_id": "RES-15234A9C",
+        "destino": "Caribe",
+        "data_embarque": "2025-06-12",
+        "passageiros": 5,
+        "cabines": 2,
+        "client_id": "cli-0g7qqgs07",
+        "valor": 17500.0,
+        "horario": "2025-06-12T16:43:27.379179",
+        "status": "cancelada"
+    },
+    "RES-9BA6A59F": {
+        "reserva_id": "RES-9BA6A59F",
+        "destino": "Caribe",
+        "data_embarque": "2025-06-12",
+        "passageiros": 7,
+        "cabines": 3,
+        "client_id": "cli-0g7qqgs07",
+        "valor": 24500.0,
+        "horario": "2025-06-12T16:44:32.570638",
+        "status": "concluído",
+        "bilhete_id": "BLT-454DDDD7"
     }
 }

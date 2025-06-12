@@ -116,8 +116,11 @@ def callback(ch, method, properties, body):
             })
 
 def consume_events():
-    for fila in ['pagamento-aprovado', 'pagamento-recusado', 'bilhete-gerado', 'promocoes']:
-        channel.basic_consume(queue=fila, on_message_callback=callback, auto_ack=True)
+    channel.basic_consume(queue='pagamento-aprovado', on_message_callback=callback, auto_ack=True)
+    channel.basic_consume(queue='pagamento-recusado', on_message_callback=callback, auto_ack=True)
+    channel.basic_consume(queue='bilhete-gerado', on_message_callback=callback, auto_ack=True)
+    channel.basic_consume(queue='promocoes', on_message_callback=callback, auto_ack=True)
+    
     print("[MS Reserva] Consumidor RabbitMQ iniciado")
     channel.start_consuming()
 

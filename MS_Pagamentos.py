@@ -2,7 +2,6 @@ from flask import Flask, request, jsonify
 import shared.utils as utils
 import datetime
 import requests
-import random
 import pika
 import uuid
 import json
@@ -51,7 +50,7 @@ def gerar_pagamento():
 @app.route("/webhook", methods=["POST"])
 def webhook():
     data = request.json
-    print("[Webhook recebido]", data)  # 👈 ADICIONE ISSO
+    print("[Webhook recebido]", data)
 
     pagamento_id = data["pagamento_id"]
     reserva_id = data["reserva_id"]

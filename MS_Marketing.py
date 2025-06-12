@@ -3,7 +3,6 @@ import shared.utils as utils
 import json
 import pika
 import uuid
-import os
 
 app = Flask(__name__)
 promocoes = utils.carregar_dados('./json/marketing.json')
@@ -32,7 +31,6 @@ def publicar_promocao():
         'promo_id': promo_id
     })
 
-# Endpoint para listar promoções
 @app.route('/api/promocoes', methods=['GET'])
 def listar_promocoes():
     return jsonify(promocoes)

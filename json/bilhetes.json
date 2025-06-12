@@ -94,5 +94,11 @@
         "reserva_id": "RES-EBA76B7A",
         "client_id": "cli-bggjwsou2",
         "horario": "2025-06-12T15:53:47.564881"
+    },
+    "BLT-454DDDD7": {
+        "bilhete_id": "BLT-454DDDD7",
+        "reserva_id": "RES-9BA6A59F",
+        "client_id": "cli-0g7qqgs07",
+        "horario": "2025-06-12T16:44:38.733722"
     }
 }
