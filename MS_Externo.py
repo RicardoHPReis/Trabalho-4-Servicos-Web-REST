@@ -2,10 +2,12 @@ from flask import Flask, request, jsonify
 import shared.utils as utils
 import threading
 import requests
+import random
 import time
 import uuid
 
 app = Flask(__name__)
+chave_privada_pagamento = utils.chave_privada()
 
 @app.route("/pagamento_externo", methods=["POST"])
 def simular_pagamento():
@@ -20,8 +22,8 @@ def simular_pagamento():
 
 
 def processar_pagamento(pagamento_id, callback_url, reserva_id, client_id):
-    time.sleep(3)
-    status = "aprovado" if uuid.uuid4().int % 2 == 0 else "recusado"
+    aprovado = random.choice([True, False])
+    status = "aprovado" if aprovado else "recusado"
 
     requests.post(callback_url, json={
         "pagamento_id": pagamento_id,

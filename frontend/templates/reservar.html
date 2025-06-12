@@ -10,12 +10,10 @@
   <nav><a href="{{ url_for('index') }}">Início</a></nav>
   <section>
     <form id="reserva-form">
-      <label>ID do Itinerário: <input type="text" name="itinerario_id" required></label>
+      <label>Destino: <input type="text" name="destino" required></label>
       <label>Data de Embarque: <input type="date" name="data_embarque" required></label>
       <label>Passageiros: <input type="number" name="passageiros" min="1" required></label>
-      <label>Cabines: <input type="number" name="cabines" min="1" required></label>
-      <label>Valor Total: <input type="number" name="valor" min="0" step="0.01" required></label>
-      
+      <label>Cabines: <input type="number" name="cabines" min="1" required></label>      
       <button type="submit">Reservar</button>
     </form>
     <div id="link-pagamento"></div>
@@ -25,7 +23,7 @@
       e.preventDefault();
       const form = new FormData(e.target);
       const data = {
-        itinerario_id: form.get('itinerario_id'),
+        destino: form.get('destino'),
         passageiros: parseInt(form.get('passageiros')),
         cabines: parseInt(form.get('cabines')),
         valor: parseFloat(form.get('valor')),

@@ -127,7 +127,6 @@ def consultar_itinerarios():
     data = request.args.get('data')
     porto = request.args.get('porto')
     
-    # Chama MS Itinerários
     params = {}
     if destino: params['destino'] = destino
     if data: params['data'] = data
@@ -139,21 +138,22 @@ def consultar_itinerarios():
 @app.route('/api/reservar', methods=['POST'])
 def efetuar_reserva():
     data = request.json
-    reserva_id = str(uuid.uuid4())
+    reserva_id = f"RES-{str(uuid.uuid4().hex[:8].upper())}"
+    valor = 2000
     
     reserva = {
         'reserva_id': reserva_id,
-        'itinerario_id': data['itinerario_id'],
+        'destino': data['destino'],
         'data_embarque': data.get('data_embarque', '2025-01-01'),  # Default value
         'passageiros': int(data['passageiros']),
         'cabines': int(data['cabines']),
         'client_id': data['client_id'],
-        'valor': float(data['valor']),
+        'valor': valor*int(data['passageiros']),
+        "horario": datetime.datetime.now().isoformat(),
         'status': 'pendente'
     }
-    reservas[reserva_id] = reserva
+    reservas = utils.adicionar_dado('./json/reservas.json', reserva_id, reserva)
 
-    # Publica evento de reserva criada
     channel.basic_publish(
         exchange='',
         routing_key='reserva-criada',
@@ -161,13 +161,13 @@ def efetuar_reserva():
         properties=pika.BasicProperties(delivery_mode=2)
     )
 
-    # Solicita pagamento ao MS Pagamentos
     pagamento_req = {
         'reserva_id': reserva_id,
-        #'client_id': dados['client_id'],
+        'client_id': reserva['client_id'],
         'valor': reserva['valor'],
-        'client_id': reserva['client_id']
+        "horario": datetime.datetime.now().isoformat()
     }
+    utils.adicionar_dado('./json/reservas.json', reserva_id, pagamento_req)
     resp = requests.post('http://localhost:5002/pagamento', json=pagamento_req)
     link_pagamento = resp.json().get('link_pagamento', '')
 

@@ -1,37 +1,13 @@
 from flask import Flask, request, jsonify
 import shared.utils as utils
 import threading
+import unidecode
 import pika
 import json
 
 app = Flask(__name__)
 
-#itinerarios = utils.carregar_dados("./json/itinerarios.json")
-
-itinerarios_db = [
-    {
-        "id": "it1",
-        "destino": "Bahamas",
-        "data_embarque": "2025-08-01",
-        "porto_embarque": "Miami",
-        "navio": "Sea Explorer",
-        "lugares_visitados": ["Nassau", "CocoCay"],
-        "noites": 5,
-        "valor": 2000,
-        "cabines_disponiveis": 10
-    },
-    {
-        "id": "it2",
-        "destino": "Mediterrâneo",
-        "data_embarque": "2025-08-10",
-        "porto_embarque": "Barcelona",
-        "navio": "Ocean Spirit",
-        "lugares_visitados": ["Roma", "Atenas", "Santorini"],
-        "noites": 7,
-        "valor": 3200,
-        "cabines_disponiveis": 8
-    }
-]
+itinerarios = utils.carregar_dados("./json/itinerarios.json")
 
 # Conexão com RabbitMQ
 connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
@@ -39,14 +15,15 @@ channel = connection.channel()
 
 def callback(ch, method, properties, body):
     msg = json.loads(body)
+    destino = unidecode.unidecode(msg["destino"].lower().strip())
     if method.routing_key == "reserva-criada":
-        for it in itinerarios_db:
-            if it["id"] == msg["itinerario_id"]:
-                it["cabines_disponiveis"] -= msg["cabines"]
+        if destino in itinerarios:
+            itinerarios[destino]["cabines_disponiveis"] -= msg["cabines"]
+            utils.salvar_dados("./json/itinerarios.json", itinerarios)
     elif method.routing_key == "reserva-cancelada":
-        for it in itinerarios_db:
-            if it["id"] == msg["itinerario_id"]:
-                it["cabines_disponiveis"] += msg["cabines"]
+        if destino in itinerarios:
+            itinerarios[destino]["cabines_disponiveis"] += msg["cabines"]
+            utils.salvar_dados("./json/itinerarios.json", itinerarios)
 
 def start_consumer():
     channel.queue_declare(queue="reserva-criada", durable=True)
@@ -63,7 +40,7 @@ threading.Thread(target=start_consumer, daemon=True).start()
 
 @app.route("/itinerarios", methods=["GET"])
 def consultar():
-    destino = request.args.get("destino")
+    destino = unidecode.unidecode(request.args.get("destino").lower().strip())
     data = request.args.get("data")
     porto = request.args.get("porto")
     
@@ -71,17 +48,17 @@ def consultar():
         {
             "id": it["id"],
             "destino": it["destino"],
-            "data": it["data_embarque"],
+            "data": it["data"],
             "navio": it["navio"],
             "porto_embarque": it["porto_embarque"],
-            "lugares": it["lugares_visitados"],
+            "lugares": it["lugares"],
             "noites": it["noites"],
             "valor": it["valor"],
             "cabines_disponiveis": it["cabines_disponiveis"]
         }
-        for it in itinerarios_db
-        if (not destino or it["destino"] == destino) and
-           (not data or it["data_embarque"] == data) and
+        for chave, it in itinerarios.items()
+        if (not destino or chave == destino) and
+           (not data or it["data"] == data) and
            (not porto or it["porto_embarque"] == porto)
     ]
     return jsonify(resultados)

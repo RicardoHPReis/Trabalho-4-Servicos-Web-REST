@@ -21,22 +21,20 @@ channel.queue_declare(queue="pagamento-recusado", durable=True)
 @app.route("/pagamento", methods=["POST"])
 def gerar_pagamento():
     data = request.json
-    reserva_id = data["reserva_id"]
+    reserva_id = data['reserva_id']
     pagamento_id = f"PAG-{str(uuid.uuid4().hex[:8].upper())}"
-    assinatura = utils.assinar_mensagem(chave_privada_pagamento, reserva_id)
-    link = f"http://localhost:5005/externo/{pagamento_id}"
+    utils.adicionar_dado('./json/pagamentos.json', pagamento_id, data)
 
     pagamento = {
         "pagamento_id": pagamento_id,
         "reserva_id": reserva_id,
-        "valor": data["valor"],
-        "cliente_id": data["cliente_id"],
+        "valor": data.get("valor"),
+        "cliente_id": data.get("cliente_id"),
         "horario": datetime.datetime.now().isoformat(),
-        "assinatura": assinatura.hex(),
         "status": "pendente"
     }
     pagamentos = utils.adicionar_dado('./json/pagamentos.json', pagamento_id, pagamento)
-    print(f"Pagamento gerado: {pagamento_id} para reserva {data['reserva_id']}")
+    print(f"Pagamento gerado: {pagamento_id} para reserva {data.get('reserva_id')}")
 
     response = requests.post("http://localhost:5004/pagamento_externo", json={
         "pagamento_id": pagamento_id,
@@ -45,55 +43,28 @@ def gerar_pagamento():
         "valor": data["valor"],
         "client_id": data["client_id"]
     })
+    link = response.json().get('link_pagamento', '')
 
     return jsonify({"link_pagamento": link})
 
-
-@app.route("/processar/<pagamento_id>", methods=["GET"])
-def processar_pagamento(pagamento_id):
-    if pagamento_id not in pagamentos:
-        return jsonify({"erro": "Pagamento não encontrado"}), 404
-
-    aprovado = random.choice([True, False])
-    status = "aprovado" if aprovado else "recusado"
-    pagamentos[pagamento_id]["status"] = status
-    
-    print(f"[{status.upper()}] Pagamento {pagamento_id} para reserva {pagamentos[pagamento_id]['reserva_id']}")
-    assinatura = utils.assinar_mensagem(chave_privada_pagamento, pagamentos[pagamento_id]["reserva_id"])
-    
-    evento = {
-        "reserva_id": pagamentos[pagamento_id]["reserva_id"],
-        "cliente_id": pagamentos[pagamento_id]["cliente_id"],
-        "assinatura": assinatura.hex()
-    }
-
-    fila = "pagamento-aprovado" if status == "aprovado" else "pagamento-recusado"
-    channel.basic_publish(
-        exchange='',
-        routing_key=fila,
-        body=json.dumps(evento),
-        properties=pika.BasicProperties(delivery_mode=2)
-    )
-    
-    return jsonify({"status": status}), 200
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
     data = request.json
     pagamento_id = data["pagamento_id"]
     status = data["status"]
+    assinatura = data["assinatura"]
     
     if pagamento_id in pagamentos:
         pagamentos[pagamento_id]["status"] = status
         
-        # Publica evento correto
         fila = "pagamento-aprovado" if status == "aprovado" else "pagamento-recusado"
         channel.basic_publish(
             exchange='',
             routing_key=fila,
             body=json.dumps({
                 "reserva_id": pagamentos[pagamento_id]["reserva_id"],
-                "client_id": pagamentos[pagamento_id]["client_id"]
+                "client_id": pagamentos[pagamento_id]["client_id"],
             }),
             properties=pika.BasicProperties(delivery_mode=2)
         )

@@ -20,5 +20,81 @@
         "num_passageiros": 3,
         "horario": "2025-06-10T21:56:43.473836",
         "link_pagamento": "http://localhost:5000/pagar/RES-D5E29004"
+    },
+    "RES-2F92D303": {
+        "reserva_id": "RES-2F92D303",
+        "itinerario_id": "it1",
+        "data_embarque": "2025-01-01",
+        "passageiros": 3,
+        "cabines": 1,
+        "client_id": "cli-bggjwsou2",
+        "valor": 6000,
+        "status": "pendente"
+    },
+    "RES-E4D8AF66": {
+        "reserva_id": "RES-E4D8AF66",
+        "itinerario_id": "it1",
+        "data_embarque": "2025-01-01",
+        "passageiros": 3,
+        "cabines": 2,
+        "client_id": "cli-bggjwsou2",
+        "valor": 6000,
+        "horario": "2025-06-11T19:34:38.482299",
+        "status": "pendente"
+    },
+    "RES-D3BB284F": {
+        "reserva_id": "RES-D3BB284F",
+        "itinerario_id": "it1",
+        "data_embarque": "2025-01-01",
+        "passageiros": 3,
+        "cabines": 2,
+        "client_id": "cli-bggjwsou2",
+        "valor": 6000,
+        "horario": "2025-06-11T19:34:39.727476",
+        "status": "pendente"
+    },
+    "RES-8F9B7DFB": {
+        "reserva_id": "RES-8F9B7DFB",
+        "itinerario_id": "it1",
+        "data_embarque": "2025-01-01",
+        "passageiros": 3,
+        "cabines": 2,
+        "client_id": "cli-bggjwsou2",
+        "valor": 6000,
+        "horario": "2025-06-11T19:34:41.779536",
+        "status": "pendente"
+    },
+    "RES-72A1046E": {
+        "reserva_id": "RES-72A1046E",
+        "itinerario_id": "it1",
+        "data_embarque": "2025-01-01",
+        "passageiros": 3,
+        "cabines": 2,
+        "client_id": "cli-bggjwsou2",
+        "valor": 6000,
+        "horario": "2025-06-11T19:34:44.431498",
+        "status": "pendente"
+    },
+    "RES-3ACCBA48": {
+        "reserva_id": "RES-3ACCBA48",
+        "itinerario_id": "it1",
+        "data_embarque": "2025-01-01",
+        "passageiros": 3,
+        "cabines": 2,
+        "client_id": "cli-bggjwsou2",
+        "valor": 6000,
+        "horario": "2025-06-11T19:34:45.746102",
+        "status": "pendente"
+    },
+    "RES-EFA05A9E": {
+        "reserva_id": "RES-EFA05A9E",
+        "itinerario_id": "it1",
+        "data_embarque": "2025-01-01",
+        "passageiros": 2,
+        "cabines": 1,
+        "client_id": "cli-bggjwsou2",
+        "valor": 4000,
+        "horario": "2025-06-11T20:06:02.279326",
+        "status": "pendente"
     }
 }

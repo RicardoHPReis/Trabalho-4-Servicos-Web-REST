@@ -19,9 +19,7 @@
     <button id="cancelar">Cancelar Interesse</button>
     <div id="notificacoes"></div>
   </section>
-  <!-- ... código existente ... -->
 <script>
-    // Gerar ou obter client_id
     let client_id = localStorage.getItem('client_id');
     if (!client_id) {
         client_id = 'cli-' + Math.random().toString(36).substr(2, 9);
