@@ -1,0 +1,6 @@
+# Trabalho 4 - Serviços Web com API REST #
+### Trabalho de Sistemas Distribuídos ###
+Em português:
+Este trabalho tem como objetivo de Implemente uma aplicação web de Reserva de Cruzeiros, utilizando microsserviços. O sistema é composto por um frontend, desenvolvido em uma linguagem distinta do backend, que se comunica com este por meio de uma API REST e recebe atualizações em tempo real por SSE (Server-Sent Events). A aplicação web permite que os clientes consultem itinerários, façam e cancelem reservas, além de registrar ou cancelar o interesse em promoções.\
+O backend é estruturado em cinco microsserviços independentes, que se comunicam predominantemente de forma assíncrona e desacoplada por meio de um sistema de mensageria, como o RabbitMQ.\
+O projeto foi feito em conjunto com Beatriz Marcelino Fernandes e pertence à matéria de Sistemas Distribuídos, provido pela professora Ana Cristina Barreiras Kochem Vendramin do curso de Sistemas de Informação na UTFPR (Universidade Tecnológica Federal do Paraná).
