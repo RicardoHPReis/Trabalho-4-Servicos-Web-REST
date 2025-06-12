@@ -13,7 +13,7 @@
             "Curaçao",
             "Barbados"
         ],
-        "cabines_disponiveis": 45
+        "cabines_disponiveis": 43
     },
     "mediterraneo": {
         "id": "2",
@@ -45,7 +45,7 @@
             "Glacier Bay",
             "Ketchikan"
         ],
-        "cabines_disponiveis": 44
+        "cabines_disponiveis": 42
     },
     "nordeste": {
         "id": "4",
@@ -77,7 +77,7 @@
             "Vietnã",
             "Malásia"
         ],
-        "cabines_disponiveis": 47
+        "cabines_disponiveis": 43
     },
     "antartida": {
         "id": "6",
@@ -109,6 +109,6 @@
             "Geirangerfjord",
             "Alesund"
         ],
-        "cabines_disponiveis": 50
+        "cabines_disponiveis": 44
     }
 }

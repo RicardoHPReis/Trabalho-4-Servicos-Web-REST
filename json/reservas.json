@@ -1,79 +1,35 @@
 {
-    "RES-40F02F09": {
-        "reserva_id": "RES-40F02F09",
-        "destino": "Caribe",
-        "data_embarque": "2025-01-01",
-        "passageiros": 2,
-        "cabines": 2,
-        "client_id": "cli-bggjwsou2",
-        "valor": 4000,
-        "horario": "2025-06-11T23:18:22.898091",
-        "status": "pendente"
-    },
-    "RES-67698A5F": {
-        "reserva_id": "RES-67698A5F",
-        "destino": "Caribe",
-        "data_embarque": "2025-01-01",
-        "passageiros": 3,
-        "cabines": 3,
-        "client_id": "cli-bggjwsou2",
-        "valor": 6000,
-        "horario": "2025-06-12T00:13:55.260119",
-        "status": "pendente"
-    },
-    "RES-FF4B0DE0": {
-        "reserva_id": "RES-FF4B0DE0",
-        "destino": "Mediterraneo",
+    "RES-EADCCA95": {
+        "reserva_id": "RES-EADCCA95",
+        "destino": "fiordes",
         "data_embarque": "2025-01-01",
         "passageiros": 4,
         "cabines": 2,
         "client_id": "cli-bggjwsou2",
-        "valor": 8000,
-        "horario": "2025-06-12T00:21:26.838131",
-        "status": "cancelada"
+        "valor": 20800.0,
+        "horario": "2025-06-12T01:31:37.950084",
+        "status": "aprovado"
     },
-    "RES-26EB43D5": {
-        "reserva_id": "RES-26EB43D5",
-        "destino": "Alasca",
+    "RES-FC0332E1": {
+        "reserva_id": "RES-FC0332E1",
+        "destino": "fiordes",
         "data_embarque": "2025-01-01",
-        "passageiros": 5,
-        "cabines": 3,
+        "passageiros": 4,
+        "cabines": 2,
         "client_id": "cli-bggjwsou2",
-        "valor": 10000,
-        "horario": "2025-06-12T00:28:37.672249",
-        "status": "pendente"
+        "valor": 20800.0,
+        "horario": "2025-06-12T01:32:32.926140",
+        "status": "aprovado"
     },
-    "RES-E3EE918A": {
-        "reserva_id": "RES-E3EE918A",
-        "destino": "Alasca",
+    "RES-E16CB7A8": {
+        "reserva_id": "RES-E16CB7A8",
+        "destino": "fiordes",
         "data_embarque": "2025-01-01",
-        "passageiros": 6,
-        "cabines": 3,
+        "passageiros": 4,
+        "cabines": 2,
         "client_id": "cli-bggjwsou2",
-        "valor": 12000,
-        "horario": "2025-06-12T00:36:27.545699",
-        "status": "pendente"
-    },
-    "RES-3AC20F50": {
-        "reserva_id": "RES-3AC20F50",
-        "destino": "Alasca",
-        "data_embarque": "2025-01-01",
-        "passageiros": 6,
-        "cabines": 3,
-        "client_id": "cli-bggjwsou2",
-        "valor": 12000,
-        "horario": "2025-06-12T00:41:23.238304",
-        "status": "pendente"
-    },
-    "RES-CF2249E8": {
-        "reserva_id": "RES-CF2249E8",
-        "destino": "Asia",
-        "data_embarque": "2025-01-01",
-        "passageiros": 6,
-        "cabines": 3,
-        "client_id": "cli-bggjwsou2",
-        "valor": 12000,
-        "horario": "2025-06-12T00:44:22.176639",
-        "status": "pendente"
+        "valor": 20800.0,
+        "horario": "2025-06-12T01:34:38.594961",
+        "status": "recusado"
     }
 }

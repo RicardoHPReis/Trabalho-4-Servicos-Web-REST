@@ -28,7 +28,6 @@ reservas = utils.carregar_dados('./json/reservas.json')
 interesses = set()
 sse_clients = {}
 
-# Helper para enviar mensagens SSE
 def send_sse_message(client_id, message):
     if client_id in sse_clients:
         for q in sse_clients[client_id]:
@@ -37,7 +36,6 @@ def send_sse_message(client_id, message):
             except:
                 pass
 
-# Stream de eventos SSE
 def event_stream(client_id):
     q = queue.Queue()
     sse_clients.setdefault(client_id, []).append(q)
@@ -49,45 +47,44 @@ def event_stream(client_id):
         if client_id in sse_clients:
             sse_clients[client_id].remove(q)
 
-def consume_events():
-    def callback(ch, method, properties, body):
-        routing_key = method.routing_key
-        event = json.loads(body)
-
-        if routing_key == 'pagamento-aprovado':
-            reserva_id = event['reserva_id']
-            client_id = event['client_id']
-            if reserva_id in reservas:
-                reservas[reserva_id]['status'] = 'pagamento aprovado'
-                send_sse_message(client_id, {
-                    'tipo': 'pagamento-aprovado', 
-                    'reserva_id': reserva_id
-                })
-
-        elif routing_key == 'pagamento-recusado':
-            reserva_id = event['reserva_id']
-            client_id = event['client_id']
-            if reserva_id in reservas:
-                reservas[reserva_id]['status'] = 'pagamento recusado'
-                send_sse_message(client_id, {
-                    'tipo': 'pagamento-recusado', 
-                    'reserva_id': reserva_id
-                })
-
-        elif routing_key == 'bilhete-gerado':
-            client_id = event['client_id']
+def callback(ch, method, properties, body):
+    routing_key = method.routing_key
+    msg = json.loads(body)
+    reserva_id = msg['reserva_id']
+    client_id = msg['client_id']
+    reservas = utils.carregar_dados('./json/reservas.json')
+    if routing_key == 'pagamento-aprovado':
+        if reserva_id in reservas:
+            reservas[reserva_id]['status'] = 'aprovado'
+            utils.salvar_dados("./json/reservas.json", reservas)
             send_sse_message(client_id, {
-                'tipo': 'bilhete-gerado', 
-                'bilhete': event
+                'tipo': 'pagamento-aprovado', 
+                'reserva_id': reserva_id
+            })
+    elif routing_key == 'pagamento-recusado':
+        if reserva_id in reservas:
+            reservas[reserva_id]['status'] = 'recusado'
+            utils.salvar_dados("./json/reservas.json", reservas)
+            requests.post('http://localhost:5000/api/cancelar-reserva', json={'reserva_id': reserva_id, 'client_id': client_id})
+            send_sse_message(client_id, {
+                'tipo': 'pagamento-recusado', 
+                'reserva_id': reserva_id
+            })
+    elif routing_key == 'bilhete-gerado':
+        reservas[reserva_id]['status'] = 'aprovado'
+        utils.salvar_dados("./json/reservas.json", reservas)
+        send_sse_message(client_id, {
+            'tipo': 'bilhete-gerado', 
+            'bilhete': msg
+        })
+    elif routing_key == 'promocoes':
+        for client_id in interesses:
+            send_sse_message(client_id, {
+                'tipo': 'promocao', 
+                'promo': msg
             })
 
-        elif routing_key == 'promocoes':
-            for client_id in interesses:
-                send_sse_message(client_id, {
-                    'tipo': 'promocao', 
-                    'promo': event
-                })
-
+def consume_events():
     channel.basic_consume(queue='pagamento-aprovado', on_message_callback=callback, auto_ack=True)
     channel.basic_consume(queue='pagamento-recusado', on_message_callback=callback, auto_ack=True)
     channel.basic_consume(queue='bilhete-gerado', on_message_callback=callback, auto_ack=True)
@@ -139,7 +136,10 @@ def consultar_itinerarios():
 def efetuar_reserva():
     data = request.json
     reserva_id = f"RES-{str(uuid.uuid4().hex[:8].upper())}"
-    valor = 2000
+    resp = requests.get('http://localhost:5001/itinerarios', params={
+        'destino': data['destino']
+    }).json()
+    valor = resp[0]['valor']
     
     reserva = {
         'reserva_id': reserva_id,
@@ -170,9 +170,6 @@ def efetuar_reserva():
     resp = requests.post('http://localhost:5002/pagamento', json=pagamento_req)
     link_pagamento = resp.json().get('link_pagamento', '')
     
-    if link_pagamento == "":
-        requests.post('http://localhost:5000/api/cancelar-reserva', json={'reserva_id': reserva_id, 'client_id': reserva['client_id']})
-
     return jsonify({
         'reserva_id': reserva_id,
         'link_pagamento': link_pagamento
